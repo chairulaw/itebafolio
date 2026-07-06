@@ -141,9 +141,6 @@ export default function PublicProfile() {
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════
-            GRID KARYA (Katalog vs Koleksi)
-        ══════════════════════════════════════════════════════ */}
         <div className="max-w-7xl mx-auto mt-4">
           <div className="flex items-center gap-3 mb-8">
             <h3 className="text-xl font-black text-slate-900 font-title tracking-tight flex items-center gap-2">

@@ -15,32 +15,44 @@ import api from '../../utils/api';
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]); // TAMBAHAN: State untuk kategori
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   // --- MENGAMBIL DATA DARI BACKEND ---
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/admin/projects');
+        // Ambil data project dan kategori secara bersamaan (Paralel)
+        const [projectsRes, categoriesRes] = await Promise.all([
+          api.get('/admin/projects'),
+          api.get('/categories').catch(() => ({ data: [] }))
+        ]);
+
+        const categoriesData = categoriesRes.data;
 
         // Memformat data dari database agar sesuai dengan kebutuhan UI
-        const formattedProjects = response.data.data.map(p => ({
-          id: p.id,
-          title: p.judul_project || 'Tanpa Judul',
-          category: p.kategori_id || 'Tidak Ada Kategori',
-          // PERBAIKAN: Membaca relasi 'user' dengan huruf kecil agar nama kreator terbaca
-          author: p.user?.nama_user || p.User?.nama_user || 'Anonim',
-          authorId: p.user?.nim || p.User?.nim || '-',
-          views: p.views || 0,
-          likes: Number(p.likes_count) || 0,
-          date: new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-          status: 'published',
-          // TAMBAHAN: Menyusun URL untuk cover project
-          coverUrl: p.cover ? `http://localhost:3000/uploads/${p.cover}` : null
-        }));
+        const formattedProjects = projectsRes.data.data.map(p => {
+          // PERBAIKAN: Mencocokkan Angka ID dengan Nama Kategori dari tabel Kategori
+          const matchedCategory = categoriesData.find(c => String(c.id) === String(p.kategori_id));
+          const categoryName = matchedCategory ? matchedCategory.nama_kategori : (p.kategori_id || 'Tidak Ada Kategori');
+
+          return {
+            id: p.id,
+            title: p.judul_project || 'Tanpa Judul',
+            category: categoryName, // Sekarang menggunakan Nama Kategori, bukan ID
+            author: p.user?.nama_user || p.User?.nama_user || 'Anonim',
+            authorId: p.user?.nim || p.User?.nim || '-',
+            views: p.views || 0,
+            likes: Number(p.likes_count) || 0,
+            date: new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+            status: 'published',
+            coverUrl: p.cover ? `http://localhost:3000/uploads/${p.cover}` : null
+          };
+        });
 
         setProjects(formattedProjects);
+        setCategories(categoriesData);
       } catch (error) {
         console.error("Gagal mengambil data project:", error);
       } finally {
@@ -48,7 +60,7 @@ export default function ManageProjects() {
       }
     };
 
-    fetchProjects();
+    fetchData();
   }, []);
 
   // --- HANDLER HAPUS PROJECT ---

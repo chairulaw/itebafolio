@@ -36,26 +36,31 @@ export default function ManageProject() {
   const [mainMediaFiles, setMainMediaFiles] = useState([]);
   const [additionalMediaFiles, setAdditionalMediaFiles] = useState([]);
 
+  const [categories, setCategories] = useState([]); // TAMBAHAN: Menyimpan kategori dari database
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditMode);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // TAMBAHAN: Mengambil daftar kategori dinamis dari Database
+  useEffect(() => {
+    api.get('/categories')
+      .then(res => setCategories(res.data))
+      .catch(err => console.error("Gagal mengambil kategori:", err));
+  }, []);
+
   // --- KUNCI KEAMANAN BERLAPIS (GATEKEEPER) ---
   useEffect(() => {
-    // 1. Cek apakah user sudah login
     if (!localStorage.getItem('token') || !currentUser.id) {
       alert("Anda harus login terlebih dahulu.");
       return navigate('/login');
     }
 
-    // 2. Cek apakah role-nya adalah Pengunjung (Role 3)
     if (currentUser.role_id === 3) {
       alert("Akses ditolak! Fitur unggah karya hanya tersedia untuk akun Mahasiswa.");
       return navigate('/');
     }
 
-    // Jika lolos dan dalam Mode Edit, ambil data dari server
     if (!isEditMode) return;
 
     const fetchProjectData = async () => {
@@ -88,6 +93,35 @@ export default function ManageProject() {
             preview: `http://localhost:3000/uploads/${project.cover}`
           });
         }
+
+        if (project.highlight) {
+          try {
+            const parsedHighlight = JSON.parse(project.highlight);
+            if (Array.isArray(parsedHighlight)) {
+              setMainMediaFiles(parsedHighlight.map(name => ({
+                isExisting: true,
+                name: name,
+                size: 'Tersimpan di server',
+                file: null
+              })));
+            }
+          } catch (e) { console.error(e); }
+        }
+
+        if (project.additional_media) {
+          try {
+            const parsedAdditional = JSON.parse(project.additional_media);
+            if (Array.isArray(parsedAdditional)) {
+              setAdditionalMediaFiles(parsedAdditional.map(name => ({
+                isExisting: true,
+                name: name,
+                size: 'Tersimpan di server',
+                file: null
+              })));
+            }
+          } catch (e) { console.error(e); }
+        }
+
       } catch (error) {
         alert("Gagal mengambil data project: " + (error.response?.data?.message || error.message));
         navigate('/profile');
@@ -140,6 +174,17 @@ export default function ManageProject() {
     }
   };
 
+  const handleAdditionalMediaChange = (e) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).map(file => ({
+        file: file,
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+      }));
+      setAdditionalMediaFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
   const removeFile = (type, index) => {
     if (type === 'main') {
       setMainMediaFiles(prev => prev.filter((_, i) => i !== index));
@@ -184,6 +229,10 @@ export default function ManageProject() {
         if (media.file) submitData.append('highlight', media.file);
       });
 
+      additionalMediaFiles.forEach(media => {
+        if (media.file) submitData.append('additional_media', media.file);
+      });
+
       if (isEditMode) {
         await api.put(`/projects/${projectId}`, submitData);
         alert("Notifikasi: Perubahan pada karya berhasil disimpan!");
@@ -204,9 +253,8 @@ export default function ManageProject() {
     }
   };
 
-  const triggerDelete = () => {
-    setDeleteModalOpen(true);
-  };
+  const triggerDelete = () => setDeleteModalOpen(true);
+  const cancelDelete = () => setDeleteModalOpen(false);
 
   const confirmDelete = async () => {
     setIsDeleting(true);
@@ -219,10 +267,6 @@ export default function ManageProject() {
       setIsDeleting(false);
       setDeleteModalOpen(false);
     }
-  };
-
-  const cancelDelete = () => {
-    setDeleteModalOpen(false);
   };
 
   if (isFetching) {
@@ -246,6 +290,7 @@ export default function ManageProject() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-6 pt-10">
         <div className="bg-white rounded-4xl border border-gray-100 shadow-sm p-8 md:p-12 space-y-12">
+          
           <section className="space-y-6">
             <div className="border-b border-gray-50 pb-3">
               <h2 className="text-lg font-black text-gray-900 tracking-tight">Informasi Dasar</h2>
@@ -275,13 +320,10 @@ export default function ManageProject() {
                     className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium text-gray-700 appearance-none"
                   >
                     <option value="" disabled>Pilih spesifikasi karya...</option>
-                    <option value="1">Frontend Web Development</option>
-                    <option value="2">Backend / Sistem Informasi</option>
-                    <option value="3">UI/UX Design</option>
-                    <option value="4">Desain Grafis / Branding</option>
-                    <option value="5">Aplikasi Mobile</option>
-                    <option value="6">Penelitian / Skripsi</option>
-                    <option value="7">Lainnya</option>
+                    {/* TAMBAHAN: Map data kategori dari database secara dinamis */}
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -372,9 +414,9 @@ export default function ManageProject() {
           <section className="space-y-6">
             <div className="border-b border-gray-50 pb-3">
               <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
-                Highlight Media <span className="text-xs font-normal text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full ml-2">Baru</span>
+                Highlight Media <span className="text-xs font-normal text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full ml-2">Utama</span>
               </h2>
-              <p className="text-sm text-gray-400">Media utama yang akan tampil di carousel. (Format: Gambar, PDF, MP4, MP3)</p>
+              <p className="text-sm text-gray-400">Media yang akan tampil di carousel/slider utama. (Format: Gambar, PDF, MP4, MP3)</p>
             </div>
 
             <label className="group relative w-full h-48 rounded-3xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-blue-50/50 hover:border-[#2C71B8] flex flex-col items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden">
@@ -382,7 +424,7 @@ export default function ManageProject() {
               <div className="w-14 h-14 bg-white group-hover:bg-[#2C71B8] rounded-2xl shadow-sm flex items-center justify-center mb-4 transition-all duration-300 transform group-hover:-translate-y-1">
                 <UploadCloud size={28} className="text-gray-400 group-hover:text-white transition-colors" />
               </div>
-              <p className="text-sm font-bold text-gray-600 group-hover:text-[#2C71B8] transition-colors mb-1">Upload banyak media sekaligus</p>
+              <p className="text-sm font-bold text-gray-600 group-hover:text-[#2C71B8] transition-colors mb-1">Upload media utama sekaligus</p>
             </label>
 
             {mainMediaFiles.length > 0 && (
@@ -399,6 +441,42 @@ export default function ManageProject() {
                       </div>
                     </div>
                     <button type="button" onClick={() => removeFile('main', idx)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><X size={16} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-6">
+            <div className="border-b border-gray-50 pb-3">
+              <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                Media Tambahan <span className="text-xs font-normal text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full ml-2">Opsional</span>
+              </h2>
+              <p className="text-sm text-gray-400">File pendukung lain seperti *source code* (jika diperbolehkan server), sketsa, atau dokumen referensi tambahan.</p>
+            </div>
+
+            <label className="group relative w-full h-32 rounded-3xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-emerald-50/50 hover:border-emerald-500 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden">
+              <input type="file" multiple className="hidden" onChange={handleAdditionalMediaChange} />
+              <div className="w-12 h-12 bg-white group-hover:bg-emerald-500 rounded-2xl shadow-sm flex items-center justify-center mb-2 transition-all duration-300 transform group-hover:-translate-y-1">
+                <UploadCloud size={24} className="text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+              <p className="text-sm font-bold text-gray-600 group-hover:text-emerald-500 transition-colors mb-1">Upload media tambahan</p>
+            </label>
+
+            {additionalMediaFiles.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {additionalMediaFiles.map((file, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-500 shrink-0">
+                        {getFileIcon(file.name)}
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-gray-700 truncate">{file.name}</p>
+                        <p className="text-[10px] text-gray-400">{file.size}</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeFile('additional', idx)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><X size={16} /></button>
                   </div>
                 ))}
               </div>

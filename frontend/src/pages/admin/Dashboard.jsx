@@ -109,14 +109,36 @@ export default function Dashboard() {
         setCategoryData(statsRes.data.charts.categories);
 
         const logsRes = await api.get('/admin/violations');
-        const formattedLogs = logsRes.data.data.map(log => ({
-          id: log.id,
-          type: log.tipe_entitas,
-          name: log.tipe_entitas === 'Project' ? log.Project?.judul_project : log.User?.nama_user,
-          author: log.User?.nama_user || 'Anonim',
-          reason: log.alasan,
-          date: new Date(log.created_at).toLocaleDateString('id-ID')
-        }));
+        
+        // PERBAIKAN: Deteksi cerdas untuk mencari nama Kreator dan Isi Komentar
+        const formattedLogs = logsRes.data.data
+          .filter(log => log.status !== 'resolved' && log.status !== 'selesai' && log.status !== 'Resolved')
+          .map(log => {
+            
+            // 1. Ekstraksi Nama (Cari di tabel User langsung, atau di dalam relasi Comment/Project)
+            const authorName = log.User?.nama_user || 
+                               log.user?.nama_user || 
+                               log.Comment?.User?.nama_user || 
+                               log.Comment?.user?.nama_user || 
+                               log.Project?.User?.nama_user || 
+                               log.Project?.user?.nama_user || 
+                               'Nama Tidak Ditemukan';
+            
+            // 2. Ekstraksi Judul Project / Isi Komentar yang melanggar
+            const entityName = log.entitas_nama || 
+                               (log.tipe_entitas?.toUpperCase() === 'PROJECT' ? log.Project?.judul_project : log.Comment?.isi_komentar) || 
+                               `ID: ${log.entitas_id}`;
+
+            return {
+              id: log.id,
+              type: log.tipe_entitas,
+              name: entityName,
+              author: authorName,
+              reason: log.alasan,
+              date: new Date(log.created_at).toLocaleDateString('id-ID')
+            };
+          });
+          
         setViolations(formattedLogs);
 
       } catch (error) {
@@ -136,12 +158,18 @@ export default function Dashboard() {
   const handleDelete = async (id, type) => {
     if (window.confirm(`Selesaikan kasus pelanggaran ${type} ini? (Data terkait akan dihapus)`)) {
       try {
-        await api.put(`/admin/violations/${id}`, { status: 'resolved' });
+        await api.delete(`/admin/violations/${id}`);
         setViolations(violations.filter(v => v.id !== id));
-        alert('Kasus berhasil ditindaklanjuti.');
+        alert('Kasus berhasil dihapus permanen.');
       } catch (error) {
-        alert('Gagal menindaklanjuti pelanggaran.');
-        console.error(error);
+        try {
+          await api.put(`/admin/violations/${id}`, { status: 'resolved' });
+          setViolations(violations.filter(v => v.id !== id));
+          alert('Kasus berhasil diselesaikan.');
+        } catch (err2) {
+          alert('Gagal menindaklanjuti pelanggaran.');
+          console.error(err2);
+        }
       }
     }
   };

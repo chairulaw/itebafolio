@@ -27,6 +27,7 @@ import Dashboard from './pages/admin/Dashboard';
 import ManageUsers from './pages/admin/ManageUsers';
 import ManageProjects from './pages/admin/ManageProjects';
 import ViolationLog from './pages/admin/ViolationLog';
+import AdminCategoryManager from './pages/admin/AdminCategoryManager';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -94,6 +95,7 @@ function AppContent() {
               <Route path="users" element={<ManageUsers />} />
               <Route path="projects" element={<ManageProjects />} />
               <Route path="violations" element={<ViolationLog />} />
+              <Route path="categories" element={<AdminCategoryManager />} />
             </Route>
           </Routes>
         )}
