@@ -122,7 +122,7 @@ export default function AdminCategoryManager() {
           <Layers size={22} />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Manajemen Filter &amp; Kategori</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Kelola Filter &amp; Kategori</h1>
           <p className="text-slate-400 text-xs font-medium">Tambah atau modifikasi halaman filter katalog tanpa mengubah kode program.</p>
         </div>
       </div>

@@ -192,7 +192,7 @@ export default function AdminLayout() {
           <SidebarLink to="/admin/users" icon={<Users size={18} />} text="Kelola Pengguna" />
           <SidebarLink to="/admin/projects" icon={<FolderGit2 size={18} />} text="Kelola Portofolio" />
           <SidebarLink to="/admin/violations" icon={<ShieldAlert size={18} />} text="Log Pelanggaran" />
-          <SidebarLink to="/admin/categories" icon={<Layers size={18} />} text="Manajemen Filter" />
+          <SidebarLink to="/admin/categories" icon={<Layers size={18} />} text="Kelola Filter" />
         </nav>
 
         <div className="p-4 border-t border-gray-50 shrink-0">
