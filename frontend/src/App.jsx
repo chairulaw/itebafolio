@@ -50,6 +50,8 @@ function AppContent() {
 
   // TAMBAHAN: Deteksi apakah user sedang berada di rute admin
   const isAdminArea = location.pathname.startsWith('/admin');
+  // const isEditProfileArea = location.pathname.startsWith('/profile/settings');
+  // const isEditAccountArea = location.pathname.startsWith('/profile/account');
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-slate-950 antialiased scroll-smooth">
@@ -61,7 +63,7 @@ function AppContent() {
 
       {/* --- HEADER --- */}
       {/* Dimatikan di halaman Hide DAN di halaman Admin */}
-      {!shouldHideHeaderAndFooter && !isAdminArea && <Header />}
+      {!shouldHideHeaderAndFooter && !isAdminArea && !isEditProfileArea && !isEditAccountArea && <Header />}
 
       <div className="flex-1 w-full">
         {isSettingsPath ? (

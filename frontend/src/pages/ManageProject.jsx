@@ -282,7 +282,7 @@ export default function ManageProject() {
               <ArrowLeft size={20} />
             </button>
             <h1 className="font-title font-black text-lg text-gray-900">
-              {isEditMode ? 'Edit Karya' : 'Buat Karya Baru'}
+              {isEditMode ? 'Edit Portofolio' : 'Buat Portofolio Baru'}
             </h1>
           </div>
         </div>
@@ -294,12 +294,12 @@ export default function ManageProject() {
           <section className="space-y-6">
             <div className="border-b border-gray-50 pb-3">
               <h2 className="text-lg font-black text-gray-900 tracking-tight">Informasi Dasar</h2>
-              <p className="text-sm text-gray-400">Berikan detail utama dari karya Anda.</p>
+              <p className="text-sm text-gray-400">Berikan detail utama dari portofolio Anda.</p>
             </div>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-2">Judul Project *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-2">Judul Portofolio *</label>
                 <input
                   type="text"
                   name="title"
@@ -312,14 +312,14 @@ export default function ManageProject() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2">Kategori Project *</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Kategori Portofolio *</label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
                     className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium text-gray-700 appearance-none"
                   >
-                    <option value="" disabled>Pilih spesifikasi karya...</option>
+                    <option value="" disabled>Pilih Kategori Portofolio...</option>
                     {/* TAMBAHAN: Map data kategori dari database secara dinamis */}
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
@@ -347,7 +347,7 @@ export default function ManageProject() {
 
               <div>
                 <label className=" text-xs font-bold text-gray-700 mb-2 flex justify-between items-end">
-                  <span>Deskripsi Project *</span>
+                  <span>Deskripsi Portofolio *</span>
                   <span className={`text-[10px] ${wordCount >= maxWords ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
                     {wordCount} / {maxWords} kata
                   </span>
@@ -356,7 +356,7 @@ export default function ManageProject() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Ceritakan tentang masalah yang Anda selesaikan, proses pembuatan, dan hasil dari karya ini..."
+                  placeholder="Ceritakan tentang tantangan, proses pembuatan, dan hasil akhir dari Portofolio ini..."
                   className="w-full p-5 bg-gray-50 border border-gray-200 rounded-2xl h-40 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium resize-none"
                 ></textarea>
               </div>
@@ -519,7 +519,7 @@ export default function ManageProject() {
                 className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-10 py-3.5 bg-[#2C71B8] text-white text-sm font-bold rounded-full shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-blue-400"
               >
                 {isEditMode ? <Save size={18} /> : <Send size={18} />}
-                {isLoading ? 'Memproses...' : (isEditMode ? 'Simpan Perubahan' : 'Publikasikan Karya')}
+                {isLoading ? 'Memproses...' : (isEditMode ? 'Simpan Perubahan' : 'Publikasikan Portofolio')}
               </button>
             </div>
           </div>

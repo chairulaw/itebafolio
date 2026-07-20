@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; // Tambahkan useNavigate
-import { User, Briefcase, LogOut, ChevronRight } from 'lucide-react';
+import { User, Briefcase, ArrowLeft, LogOut, ChevronRight } from 'lucide-react';
 
 export default function SettingsSidebar() {
   const location = useLocation();
@@ -39,6 +39,13 @@ export default function SettingsSidebar() {
 
         <div className="my-4 border-t border-gray-50"></div>
 
+        <button
+          onClick={() => navigate('/profile')}
+          className="cursor-pointer w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-2xl transition-all group"
+        >
+          <ArrowLeft size={18} className="group-hover:translate-x-1 transition-transform" />
+          <span>Kembali</span>
+        </button>
         <button
           onClick={handleLogout}
           className="cursor-pointer w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-2xl transition-all group"
