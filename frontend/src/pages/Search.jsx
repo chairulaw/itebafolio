@@ -76,7 +76,7 @@ export default function SearchResults() {
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                   <FileQuestion size={40} className="text-slate-400" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Tidak ada karya yang cocok</h3>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">Portofolio tidak ditemukan</h3>
                 <p className="text-slate-500 max-w-md text-center leading-relaxed">
                   Kami tidak dapat menemukan portofolio yang cocok dengan kata kunci <strong>"{keyword}"</strong>. Coba gunakan kata kunci lain.
                 </p>

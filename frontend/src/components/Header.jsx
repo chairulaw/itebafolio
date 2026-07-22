@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, ChevronDown, Menu, X, LogOut, Monitor, Code2, Palette, Calculator } from 'lucide-react';
 import { logoHeader } from '../assets/Assets';
 import { slugify } from '../utils/mockData';
+import toast from 'react-hot-toast';
 
 const prodiIcons = {
   "Sistem Informasi": Monitor,
@@ -32,6 +33,7 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    toast.success('Logout berhasil!');
     setIsLoggedIn(false);
     navigate('/');
   };

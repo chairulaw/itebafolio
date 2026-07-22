@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react'; // Tambahkan useMemo
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast'; // TAMBAHAN 1: Import fungsi toast
 import Iridescence from '../components/Iridescence';
 import { logoAuth } from '../assets/Assets';
 import api from '../utils/api';
@@ -14,7 +15,6 @@ export default function Login() {
   const navigate = useNavigate();
 
   // --- MEMOIZATION BACKGROUND ---
-  // Mengunci komponen Iridescence agar tidak ikut berkedip saat mengetik
   const iridescenceBackground = useMemo(() => (
     <div className="absolute inset-0 z-0">
       <Iridescence
@@ -24,12 +24,15 @@ export default function Login() {
         speed={0.7}
       />
     </div>
-  ), []); // Array kosong [] berarti komponen ini hanya di-render 1x selamanya
+  ), []);
 
   // --- HANDLER FUNGSI LOGIN ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Memulai proses dengan toast loading (opsional tapi bagus untuk UX)
+    const toastId = toast.loading('Memeriksa kredensial...');
 
     try {
       const response = await api.post('/auth/login', {
@@ -40,6 +43,11 @@ export default function Login() {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
+      // TAMBAHAN 2: Ganti toast loading menjadi sukses jika berhasil
+      toast.success('Login berhasil! Selamat datang.', {
+        id: toastId, // Mengganti toast loading yang sama
+      });
+
       if (response.data.user.role_id === 1) {
         navigate('/admin');
       } else {
@@ -47,7 +55,10 @@ export default function Login() {
       }
 
     } catch (error) {
-      alert(error.response?.data?.message || "Terjadi kesalahan saat login!");
+      // TAMBAHAN 3: Ganti alert() bawaan menjadi toast error
+      toast.error(error.response?.data?.message || "Terjadi kesalahan saat login!", {
+        id: toastId, // Mengganti toast loading yang sama
+      });
     } finally {
       setIsLoading(false);
     }

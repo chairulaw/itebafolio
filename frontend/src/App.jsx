@@ -7,6 +7,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsSidebar from './components/SettingsSidebar';
 import GlobalBackground from './components/GlobalBackground';
+import {Toaster} from 'react-hot-toast';
 
 // PAGES
 import Homepage from './pages/Homepage';
@@ -50,8 +51,8 @@ function AppContent() {
 
   // TAMBAHAN: Deteksi apakah user sedang berada di rute admin
   const isAdminArea = location.pathname.startsWith('/admin');
-  // const isEditProfileArea = location.pathname.startsWith('/profile/settings');
-  // const isEditAccountArea = location.pathname.startsWith('/profile/account');
+  const isEditProfileArea = location.pathname.startsWith('/profile/settings');
+  const isEditAccountArea = location.pathname.startsWith('/profile/account');
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-slate-950 antialiased scroll-smooth">
@@ -115,6 +116,18 @@ function App() {
   return (
     <PortfolioProvider>
       <BrowserRouter>
+      <Toaster 
+        position="top-center" 
+        reverseOrder={false} 
+        toastOptions={{
+          duration: 3000,
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
         <AppContent />
       </BrowserRouter>
     </PortfolioProvider>

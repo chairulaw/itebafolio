@@ -164,9 +164,9 @@ export default function FilterPage() {
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6 shadow-inner">
                   <Inbox size={40} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-black text-gray-800 mb-3 tracking-tight">Belum Ada Karya</h3>
+                <h3 className="text-2xl font-black text-gray-800 mb-3 tracking-tight">Belum Ada Portofolio</h3>
                 <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
-                  Karya portofolio untuk kategori <span className="font-bold text-gray-700">"{activeInfo.label}"</span> belum tersedia saat ini. Jadilah mahasiswa pertama yang membagikan inovasi Anda di kategori ini!
+                  Portofolio untuk kategori <span className="font-bold text-gray-700">"{activeInfo.label}"</span> belum tersedia saat ini. Jadilah mahasiswa pertama yang membagikan inovasi Anda di kategori ini!
                 </p>
                 <button 
                   onClick={() => navigate('/manage-project')}
