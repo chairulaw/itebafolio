@@ -16,6 +16,7 @@ import {
   Trash2,
   AlertTriangle 
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 export default function ManageProject() {
@@ -52,12 +53,12 @@ export default function ManageProject() {
   // --- KUNCI KEAMANAN BERLAPIS (GATEKEEPER) ---
   useEffect(() => {
     if (!localStorage.getItem('token') || !currentUser.id) {
-      alert("Anda harus login terlebih dahulu.");
+      toast.error("Anda harus login terlebih dahulu.");
       return navigate('/login');
     }
 
     if (currentUser.role_id === 3) {
-      alert("Akses ditolak! Fitur unggah karya hanya tersedia untuk akun Mahasiswa.");
+      toast.error("Akses ditolak! Fitur unggah karya hanya tersedia untuk akun Mahasiswa.");
       return navigate('/');
     }
 
@@ -69,12 +70,12 @@ export default function ManageProject() {
         const project = response.data.find(p => p.id === parseInt(projectId));
 
         if (!project) {
-          alert("Karya tidak ditemukan.");
+          toast.error("Karya tidak ditemukan.");
           return navigate('/profile');
         }
 
         if (project.user_id !== currentUser.id && currentUser.role_id !== 1) {
-          alert("Akses ditolak: Anda hanya dapat mengedit karya Anda sendiri.");
+          toast.error("Akses ditolak: Anda hanya dapat mengedit karya Anda sendiri.");
           return navigate('/profile');
         }
 
@@ -123,7 +124,7 @@ export default function ManageProject() {
         }
 
       } catch (error) {
-        alert("Gagal mengambil data project: " + (error.response?.data?.message || error.message));
+        toast.error("Gagal mengambil data project: " + (error.response?.data?.message || error.message));
         navigate('/profile');
       } finally {
         setIsFetching(false);
@@ -205,7 +206,7 @@ export default function ManageProject() {
     e.preventDefault();
 
     if (!formData.title || !formData.category || !formData.description) {
-      return alert("Mohon lengkapi judul, kategori spesifik, dan deskripsi project.");
+      return toast.error("Mohon lengkapi judul, kategori spesifik, dan deskripsi project.");
     }
 
     setIsLoading(true);
@@ -220,7 +221,7 @@ export default function ManageProject() {
       if (thumbnailFile && !thumbnailFile.isExisting && thumbnailFile.file) {
         submitData.append('cover', thumbnailFile.file);
       } else if (!thumbnailFile && !isEditMode) {
-        alert("Thumbnail Cover wajib diisi!");
+        toast.error("Thumbnail Cover wajib diisi!");
         setIsLoading(false);
         return;
       }
@@ -235,19 +236,19 @@ export default function ManageProject() {
 
       if (isEditMode) {
         await api.put(`/projects/${projectId}`, submitData);
-        alert("Notifikasi: Perubahan pada karya berhasil disimpan!");
+        toast.success("Perubahan pada karya berhasil disimpan!");
       } else {
         const res = await api.post(`/projects`, submitData);
         if (res.data.warning) {
-          alert(`Berhasil diunggah! Note: ${res.data.warning}`);
+          toast.success(`Berhasil diunggah! Note: ${res.data.warning}`);
         } else {
-          alert("Notifikasi: Karya baru berhasil dipublikasikan!");
+          toast.success("Karya baru berhasil dipublikasikan!");
         }
       }
 
       navigate('/profile');
     } catch (error) {
-      alert(`Gagal ${isEditMode ? 'memperbarui' : 'mempublikasikan'} karya: ` + (error.response?.data?.message || error.message));
+      toast.error(`Gagal ${isEditMode ? 'memperbarui' : 'mempublikasikan'} karya: ` + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -262,8 +263,9 @@ export default function ManageProject() {
       await api.delete(`/projects/${projectId}`);
       setDeleteModalOpen(false);
       navigate('/profile');
+      toast.success("Karya berhasil dihapus!");
     } catch (error) {
-      alert("Gagal menghapus karya: " + (error.response?.data?.message || error.message));
+      toast.error("Gagal menghapus karya: " + (error.response?.data?.message || error.message));
       setIsDeleting(false);
       setDeleteModalOpen(false);
     }
@@ -320,7 +322,6 @@ export default function ManageProject() {
                     className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium text-gray-700 appearance-none"
                   >
                     <option value="" disabled>Pilih Kategori Portofolio...</option>
-                    {/* TAMBAHAN: Map data kategori dari database secara dinamis */}
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
                     ))}
@@ -511,7 +512,7 @@ export default function ManageProject() {
                 type="button"
                 className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-8 py-3.5 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full transition-colors border border-transparent hover:border-gray-200"
               >
-                {isEditMode ? 'Batal' : 'Simpan Draft'}
+                Batal
               </button>
               <button
                 onClick={handleSubmit}

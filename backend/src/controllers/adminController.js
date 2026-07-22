@@ -22,18 +22,24 @@ export const updateUser = async (req, res) => {
     try {
         if (req.user.role_id !== 1) return res.status(403).json({ message: "Akses ditolak." });
 
-        const { nama_user, email, nim, prodi, role_id } = req.body;
+        // TAMBAHAN: Tangkap angkatan, bio, website, dan no_wa dari req.body
+        const { nama_user, email, nim, prodi, role_id, angkatan, bio, website, no_wa } = req.body;
         const user = await User.findByPk(req.params.id);
 
         if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
 
-        // Menggunakan undefined check agar bisa menerima nilai null
+        // Menggunakan undefined check agar bisa menerima nilai null (kosong)
         await user.update({
             nama_user: nama_user !== undefined ? nama_user : user.nama_user,
             email: email !== undefined ? email : user.email,
             nim: nim !== undefined ? nim : user.nim,
             prodi: prodi !== undefined ? prodi : user.prodi,
             role_id: role_id !== undefined ? role_id : user.role_id,
+            // TAMBAHAN: Masukkan ke fungsi update
+            angkatan: angkatan !== undefined ? angkatan : user.angkatan,
+            bio: bio !== undefined ? bio : user.bio,
+            website: website !== undefined ? website : user.website,
+            no_wa: no_wa !== undefined ? no_wa : user.no_wa
         });
 
         res.status(200).json({ success: true, message: "Data pengguna berhasil diperbarui!" });

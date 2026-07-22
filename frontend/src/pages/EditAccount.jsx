@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Mail, ShieldCheck, KeyRound } from "lucide-react";
+import toast from "react-hot-toast";
 import api from '../utils/api';
 
 export default function EditAccount() {
@@ -25,18 +26,18 @@ export default function EditAccount() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      return alert("Password dan Konfirmasi Password tidak cocok!");
+      return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
     setIsLoading(true);
     try {
       // Pastikan endpoint ini sudah dibuat di rute backend sesuai panduan di atas
       await api.put('/users/change-password', { newPassword });
-      alert("Kata sandi berhasil diperbarui!");
+      toast.success("Kata sandi berhasil diperbarui!");
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      alert("Gagal memperbarui kata sandi: " + (error.response?.data?.message || error.message));
+      toast.error("Gagal memperbarui kata sandi: " + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }

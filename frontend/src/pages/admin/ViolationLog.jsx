@@ -13,6 +13,7 @@ import {
   Folder,        
   ExternalLink
 } from 'lucide-react';
+import toast from 'react-hot-toast'
 import api from '../../utils/api';
 
 export default function ViolationLog() {
@@ -44,7 +45,8 @@ export default function ViolationLog() {
       }));
       setViolations(formattedData);
     } catch (error) {
-      console.error("Gagal mengambil log pelanggaran:", error);
+      toast.error("Gagal mengambil log pelanggaran.");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +69,7 @@ export default function ViolationLog() {
         await api.put(`/admin/violations/${id}`, { status: newStatus });
         setViolations(violations.map(v => v.id === id ? { ...v, status: newStatus } : v));
       } catch (error) {
-        alert("Gagal memproses tindakan.");
+        toast.error("Gagal memproses tindakan.");
         console.error(error);
       }
     }
@@ -90,7 +92,7 @@ export default function ViolationLog() {
         setViolations(violations.map(v => v.id === selectedViolation.id ? { ...v, status: newStatus } : v));
         setSelectedViolation(null);
       } catch (error) {
-        alert("Gagal memproses tindakan.");
+        toast.error("Gagal memproses tindakan.");
         console.error(error);
       }
     }

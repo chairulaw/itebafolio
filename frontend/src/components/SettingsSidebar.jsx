@@ -1,19 +1,50 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // Tambahkan useNavigate
-import { User, Briefcase, ArrowLeft, LogOut, ChevronRight } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { User, Briefcase, ArrowLeft, LogOut, ChevronRight, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function SettingsSidebar() {
   const location = useLocation();
-  const navigate = useNavigate(); // Inisialisasi navigate
+  const navigate = useNavigate();
 
   const isActive = (path) => location.pathname === path;
 
+  // --- FUNGSI LOGOUT DENGAN CUSTOM TOAST INTERAKTIF ---
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Hapus token dari browser
-    localStorage.removeItem('user');  // Hapus data user
-
-    // Gunakan window.location.href agar aplikasi termuat ulang dan state header ikut ter-reset
-    window.location.href = '/';
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[200px]">
+        <div className="flex items-center gap-2">
+          <AlertTriangle size={18} className="text-amber-500 shrink-0" />
+          <p className="font-semibold text-white text-sm">Yakin ingin keluar?</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              
+              // Hapus token dan data user
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              
+              // Muat ulang aplikasi ke beranda
+              window.location.href = '/';
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors cursor-pointer"
+          >
+            Ya, Keluar
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Toast tetap terbuka sampai user memilih
+      position: 'top-center',
+    });
   };
 
   return (
@@ -62,8 +93,9 @@ function SidebarLink({ to, icon, label, active }) {
   return (
     <Link
       to={to}
-      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all group ${active ? 'bg-blue-50 text-[#2C71B8]' : 'text-gray-500 hover:bg-gray-50'
-        }`}
+      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all group ${
+        active ? 'bg-blue-50 text-[#2C71B8]' : 'text-gray-500 hover:bg-gray-50'
+      }`}
     >
       <div className="flex items-center gap-3">
         <span className={`${active ? 'text-[#2C71B8]' : 'text-gray-400 group-hover:text-gray-600'}`}>

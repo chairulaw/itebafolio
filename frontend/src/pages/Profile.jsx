@@ -35,11 +35,10 @@ function StatCard({ icon: Icon, label, value, gradient, iconColor, delay = 0 }) 
 function ActionBtn({ to, icon: Icon, label, primary }) {
   const base = "group inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all duration-200 active:scale-95";
   
-  // Jika Primary: Background Biru, maka Teks Putih
-  // Jika Secondary: Background Putih, maka Teks Slate/Gelap
+  // PERBAIKAN: Tambahkan ! (important) pada text-white agar tidak tertimpa
   const variant = primary
-    ? "bg-[#2C71B8] text-white hover:bg-[#1d5a9a] shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5"
-    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:-translate-y-0.5 shadow-sm";
+    ? "bg-[#2C71B8] !text-white hover:bg-[#1d5a9a] shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5"
+    : "bg-white !text-slate-700 border border-slate-200 hover:bg-slate-50 hover:-translate-y-0.5 shadow-sm";
     
   return (
     <Link to={to} className={`${base} ${variant}`}>

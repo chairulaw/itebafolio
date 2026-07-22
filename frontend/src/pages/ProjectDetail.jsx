@@ -1,6 +1,7 @@
 import { Heart, ChevronLeft, ChevronRight, Send, FileText, ExternalLink, Music, Maximize2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import toast from 'react-hot-toast'
 import api from "../utils/api";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
@@ -123,7 +124,7 @@ export default function ProjectDetail() {
         const commentsRes = await api.get(`/projects/${id}/comments`);
         setComments(commentsRes.data);
       } catch (error) {
-        alert("Karya tidak ditemukan");
+        toast.error("Karya tidak ditemukan");
         navigate('/');
       } finally {
         setIsLoading(false);
@@ -140,7 +141,7 @@ export default function ProjectDetail() {
       if (res.data.isLiked) setBurstKey((k) => k + 1);
     } catch (error) {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        alert("Anda harus login untuk menyukai karya ini.");
+        toast.error("Anda harus login untuk menyukai karya ini.");
       }
     }
   };
@@ -149,24 +150,39 @@ export default function ProjectDetail() {
     e.preventDefault();
     if (!newComment.trim()) return;
     setIsSubmitting(true);
+    
     try {
       const res = await api.post(`/projects/${id}/comments`, { komentar: newComment });
 
+      // 1. Cek apakah ada pesan warning eksplisit dari backend
       if (res.data.warning) {
-        alert(`Sistem Moderasi: ${res.data.warning}`);
+        toast.error(`Sistem Moderasi: ${res.data.warning}`, { duration: 5000 });
+      } 
+      // 2. DETEKSI CERDAS: Jika teks yang dikirim BERBEDA dengan yang dikembalikan server (berarti disensor)
+      else if (res.data.data && res.data.data.komentar !== newComment) {
+        toast.error("Sistem Moderasi: Komentar Anda mengandung kata tidak pantas dan telah disensor otomatis.", { 
+          duration: 5000,
+          icon: '🚨' 
+        });
+      } 
+      // 3. Jika komentar aman dan tidak ada perubahan
+      else {
+        toast.success("Komentar berhasil ditambahkan!");
       }
 
+      // Masukkan komentar ke daftar tampilan
       if (res.data.data) {
         setComments((prev) => [res.data.data, ...prev]);
       }
       setNewComment("");
+      
     } catch (error) {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        alert("Anda harus login untuk berkomentar.");
+        toast.error("Anda harus login untuk berkomentar.");
       } else if (error.response?.status === 400 && error.response?.data?.message) {
-        alert(`Sistem Moderasi: ${error.response.data.message}`);
+        toast.error(`Sistem Moderasi: ${error.response.data.message}`);
       } else {
-        alert("Gagal mengirim komentar.");
+        toast.error("Gagal mengirim komentar.");
       }
     } finally {
       setIsSubmitting(false);

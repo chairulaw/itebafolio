@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Inbox
 } from 'lucide-react';
+import toast from 'react-hot-toast'
 import api from '../../utils/api';
 
 export default function ManageProjects() {
@@ -54,7 +55,7 @@ export default function ManageProjects() {
         setProjects(formattedProjects);
         setCategories(categoriesData);
       } catch (error) {
-        console.error("Gagal mengambil data project:", error);
+        toast.error("Gagal mengambil data project.");
       } finally {
         setIsLoading(false);
       }
@@ -69,9 +70,9 @@ export default function ManageProjects() {
       try {
         await api.delete(`/admin/projects/${id}`);
         setProjects(projects.filter(p => p.id !== id));
-        alert("Project berhasil dihapus dari sistem.");
+        toast.success("Project berhasil dihapus dari sistem.");
       } catch (error) {
-        alert("Gagal menghapus project.");
+        toast.error("Gagal menghapus project.");
         console.error(error);
       }
     }

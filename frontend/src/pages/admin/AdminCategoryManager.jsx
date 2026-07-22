@@ -3,6 +3,7 @@ import {
   Plus, Trash2, Edit3, UploadCloud, ImageIcon, 
   Layers, FolderPlus, Sparkles, HelpCircle, X 
 } from 'lucide-react';
+import toast from 'react-hot-toast'
 import api from '../../utils/api';
 
 export default function AdminCategoryManager() {
@@ -26,7 +27,8 @@ export default function AdminCategoryManager() {
       const res = await api.get('/categories');
       setCategories(res.data);
     } catch (error) {
-      console.error("Gagal memuat kategori:", error);
+      toast.error("Gagal memuat kategori")
+      console.error(error);
     } finally {
       setIsFetching(false);
     }
@@ -62,11 +64,11 @@ export default function AdminCategoryManager() {
       if (editingId) {
         // Mode Update
         await api.put(`/categories/${editingId}`, formData);
-        alert("Filter/Kategori berhasil diperbarui!");
+        toast.success("Filter/Kategori berhasil diperbarui!");
       } else {
         // Mode Tambah Baru
         await api.post('/categories', formData);
-        alert("Filter/Kategori baru berhasil ditambahkan!");
+        toast.success("Filter/Kategori baru berhasil ditambahkan!");
       }
       resetForm();
       fetchCategories();
@@ -90,17 +92,48 @@ export default function AdminCategoryManager() {
     setBannerFile(null);
   };
 
-  // 5. Handle Hapus Kategori
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus filter "${name}"? Proyek dengan kategori ini mungkin akan kehilangan relasinya.`)) return;
-
-    try {
-      await api.delete(`/categories/${id}`);
-      alert("Kategori berhasil dihapus!");
-      fetchCategories();
-    } catch (error) {
-      alert("Gagal menghapus: " + (error.response?.data?.message || error.message));
-    }
+// 5. Handle Hapus Kategori dengan Custom Toast Interaktif
+  const handleDelete = (id, name) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[240px]">
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
+            🗑️
+          </div>
+          <div>
+            <p className="font-bold text-white text-sm">Hapus kategori "{name}"?</p>
+            <p className="text-[11.5px] text-white mt-0.5 leading-snug">Proyek terkait mungkin akan kehilangan relasinya.</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const loadingToastId = toast.loading("Menghapus kategori...");
+              try {
+                await api.delete(`/categories/${id}`);
+                toast.success("Kategori berhasil dihapus!", { id: loadingToastId });
+                fetchCategories();
+              } catch (error) {
+                toast.error("Gagal menghapus: " + (error.response?.data?.message || error.message), { id: loadingToastId });
+              }
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors cursor-pointer"
+          >
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Toast tetap terbuka sampai user memilih
+      position: 'top-center',
+    });
   };
 
   const resetForm = () => {

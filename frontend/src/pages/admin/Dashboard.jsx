@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Area, AreaChart
+  LineChart, Line, Area, AreaChart, LabelList
 } from 'recharts';
 import api from "../../utils/api";
 
@@ -75,16 +75,50 @@ const SkeletonLoader = () => (
 );
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, unit = '', labelPrefix = '' }) => {
   if (active && payload && payload.length) {
+    const value = payload[0].value;
+    const fullLabel = payload[0].payload?.fullName || label;
     return (
-      <div className="bg-gray-900/95 backdrop-blur-sm text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10">
-        <p className="text-xs font-medium text-gray-400 mb-1">{label}</p>
-        <p className="text-lg font-bold">{payload[0].value}</p>
+      <div className="bg-gray-900/95 backdrop-blur-sm text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10 max-w-[240px]">
+        <p className="text-xs font-medium text-gray-400 mb-1 truncate">{labelPrefix}{fullLabel}</p>
+        <p className="text-lg font-bold leading-tight">
+          {Number(value).toLocaleString('id-ID')}
+          {unit && <span className="text-xs font-medium text-gray-400 ml-1.5">{unit}</span>}
+        </p>
       </div>
     );
   }
   return null;
+};
+
+// Label angka langsung di ujung bar horizontal
+const BarValueLabel = (props) => {
+  const { x, y, width, height, value } = props;
+  if (value === undefined || value === null) return null;
+  return (
+    <text
+      x={x + width + 8}
+      y={y + height / 2}
+      dy={4}
+      textAnchor="start"
+      className="fill-gray-700 font-bold"
+      style={{ fontSize: 12 }}
+    >
+      {Number(value).toLocaleString('id-ID')}
+    </text>
+  );
+};
+
+// Label angka di atas titik area chart
+const AreaValueLabel = (props) => {
+  const { x, y, value } = props;
+  if (value === undefined || value === null) return null;
+  return (
+    <text x={x} y={y - 10} textAnchor="middle" className="fill-blue-700 font-bold" style={{ fontSize: 11 }}>
+      {Number(value).toLocaleString('id-ID')}
+    </text>
+  );
 };
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
@@ -106,16 +140,20 @@ export default function Dashboard() {
         const statsRes = await api.get('/admin/dashboard');
         setStats(statsRes.data.stats);
         setTrendData(statsRes.data.charts.trends);
-        setCategoryData(statsRes.data.charts.categories);
+
+        // Menyimpan nama lengkap program studi agar informatif
+        const cats = (statsRes.data.charts.categories || []).map(c => ({
+          ...c,
+          fullName: c.name
+        }));
+        setCategoryData(cats);
 
         const logsRes = await api.get('/admin/violations');
         
-        // PERBAIKAN: Deteksi cerdas untuk mencari nama Kreator dan Isi Komentar
+        // Deteksi cerdas untuk mencari nama Kreator dan Isi Komentar
         const formattedLogs = logsRes.data.data
           .filter(log => log.status !== 'resolved' && log.status !== 'selesai' && log.status !== 'Resolved')
           .map(log => {
-            
-            // 1. Ekstraksi Nama (Cari di tabel User langsung, atau di dalam relasi Comment/Project)
             const authorName = log.User?.nama_user || 
                                log.user?.nama_user || 
                                log.Comment?.User?.nama_user || 
@@ -124,7 +162,6 @@ export default function Dashboard() {
                                log.Project?.user?.nama_user || 
                                'Nama Tidak Ditemukan';
             
-            // 2. Ekstraksi Judul Project / Isi Komentar yang melanggar
             const entityName = log.entitas_nama || 
                                (log.tipe_entitas?.toUpperCase() === 'PROJECT' ? log.Project?.judul_project : log.Comment?.isi_komentar) || 
                                `ID: ${log.entitas_id}`;
@@ -174,6 +211,8 @@ export default function Dashboard() {
     }
   };
 
+  const totalCategoryProjects = categoryData.reduce((sum, c) => sum + (c.total || 0), 0);
+
   if (isLoading) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 p-6 md:p-8">
       <style>{`@keyframes shimmer { 100% { transform: translateX(100%); } }`}</style>
@@ -182,7 +221,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="relative min-h-screen  from-slate-50 via-blue-50/30 to-slate-50">
+    <div className="relative min-h-screen from-slate-50 via-blue-50/30 to-slate-50">
 
       {/* Global styles */}
       <style>{`
@@ -216,7 +255,7 @@ export default function Dashboard() {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative flex items-start justify-between mb-5">
-              <div className="w-13 h-13 w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+              <div className="w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
                 <Users size={24} className="text-white" />
               </div>
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
@@ -224,7 +263,7 @@ export default function Dashboard() {
               </span>
             </div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Pengguna</p>
-            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalUsers.toLocaleString()}</h3>
+            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalUsers.toLocaleString('id-ID')}</h3>
             <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style={{ width: '72%' }} />
             </div>
@@ -244,7 +283,7 @@ export default function Dashboard() {
               </span>
             </div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Project</p>
-            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalProjects.toLocaleString()}</h3>
+            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalProjects.toLocaleString('id-ID')}</h3>
             <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style={{ width: '58%' }} />
             </div>
@@ -255,7 +294,6 @@ export default function Dashboard() {
           <div className="group card-hover relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-red-100/60 shadow-sm shadow-red-100/50 overflow-hidden cursor-default">
             <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            {/* Decorative ghost icon */}
             <div className="absolute -right-5 -bottom-5 text-red-100/70 group-hover:scale-110 group-hover:text-red-200/80 transition-all duration-300 pointer-events-none">
               <AlertOctagon size={96} strokeWidth={1} />
             </div>
@@ -284,7 +322,7 @@ export default function Dashboard() {
           {/* Chart 1: Tren Upload */}
           <div className="group relative bg-white/80 backdrop-blur-sm p-7 rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-transparent pointer-events-none" />
-            <div className="relative flex items-start justify-between mb-6">
+            <div className="relative flex items-start justify-between mb-2">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -292,66 +330,142 @@ export default function Dashboard() {
                   </div>
                   <h3 className="text-sm font-bold text-gray-800">Tren Upload Project</h3>
                 </div>
-                <p className="text-xs text-gray-400 ml-9">Aktivitas unggah per bulan</p>
+                <p className="text-xs text-gray-400 ml-9">Jumlah project baru yang diunggah, per bulan</p>
               </div>
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-blue-300">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-blue-300 shrink-0">
                 <Sparkles size={9} /> MONTHLY
               </span>
             </div>
-            <div className="h-64 w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-                  <defs>
-                    <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2C71B8" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#2C71B8" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 500 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e2e8f0', strokeWidth: 1.5 }} />
-                  <Area type="monotone" dataKey="projects" stroke="#2C71B8" strokeWidth={3} fill="url(#trendGrad)" dot={{ r: 4, fill: '#2C71B8', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, fill: '#2C71B8', stroke: '#fff', strokeWidth: 2 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+
+            {trendData.length === 0 ? (
+              <div className="h-64 w-full flex flex-col items-center justify-center gap-2 text-center">
+                <TrendingUp size={28} className="text-gray-200" />
+                <p className="text-xs text-gray-400">Belum ada data upload untuk ditampilkan.</p>
+              </div>
+            ) : (
+              <div className="h-64 w-full relative mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 24, right: 12, bottom: 0, left: -8 }}>
+                    <defs>
+                      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2C71B8" stopOpacity={0.18} />
+                        <stop offset="95%" stopColor="#2C71B8" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                      tick={{ fontSize: 11, fill: '#94a3b8' }}
+                      width={35}
+                      label={{
+                        value: 'Jumlah Project',
+                        angle: -90,
+                        position: 'insideLeft',
+                        style: { fontSize: 10, fill: '#94a3b8', fontWeight: 600 },
+                        dx: 12
+                      }}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip unit="project" labelPrefix="Bulan " />}
+                      cursor={{ stroke: '#e2e8f0', strokeWidth: 1.5 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="projects"
+                      name="Project"
+                      stroke="#2C71B8"
+                      strokeWidth={3}
+                      fill="url(#trendGrad)"
+                      dot={{ r: 4, fill: '#2C71B8', strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 6, fill: '#2C71B8', stroke: '#fff', strokeWidth: 2 }}
+                    >
+                      <LabelList dataKey="projects" content={<AreaValueLabel />} />
+                    </Area>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
-          {/* Chart 2: Distribusi Prodi */}
-          <div className="group relative bg-white/80 backdrop-blur-sm p-7 rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/25 via-transparent to-transparent pointer-events-none" />
-            <div className="relative flex items-start justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                    <Activity size={14} className="text-violet-500" />
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-800">Distribusi Program Studi</h3>
-                </div>
-                <p className="text-xs text-gray-400 ml-9">Total project per prodi</p>
-              </div>
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-violet-300">
-                <Sparkles size={9} /> ALL TIME
-              </span>
-            </div>
-            <div className="h-64 w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 16 }}>
-                  <defs>
-                    <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#6d28d9" />
-                      <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }} width={110} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="total" fill="url(#barGrad)" radius={[0, 8, 8, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+{/* Chart 2: Distribusi Prodi */}
+<div className="group relative bg-white/80 backdrop-blur-sm p-7 rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden">
+  <div className="absolute inset-0 bg-gradient-to-br from-violet-50/25 via-transparent to-transparent pointer-events-none" />
+  <div className="relative flex items-start justify-between mb-2">
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
+          <Activity size={14} className="text-violet-500" />
+        </div>
+        <h3 className="text-sm font-bold text-gray-800">Distribusi Program Studi</h3>
+      </div>
+      <p className="text-xs text-gray-400 ml-9">
+        Total {totalCategoryProjects.toLocaleString('id-ID')} project, dikelompokkan per program studi
+      </p>
+    </div>
+    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-violet-300 shrink-0">
+      <Sparkles size={9} /> ALL TIME
+    </span>
+  </div>
+
+  {categoryData.length === 0 ? (
+    <div className="h-64 w-full flex flex-col items-center justify-center gap-2 text-center">
+      <Activity size={28} className="text-gray-200" />
+      <p className="text-xs text-gray-400">Belum ada data project untuk ditampilkan.</p>
+    </div>
+  ) : (
+    <div className="h-64 w-full relative mt-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 45, bottom: 0, left: 24 }}>
+          <defs>
+            <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+          <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
+          
+          {/* PERBAIKAN DI SINI: Mengubah angka ID menjadi Nama Program Studi */}
+          <YAxis
+            dataKey="name"
+            type="category"
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(value) => {
+              // Pemetaan manual ID angka ke Nama Prodi jika datanya masih berupa angka
+              const mapProdi = {
+                '1': 'Sistem Informasi',
+                '2': 'Teknik Komputer',
+                '3': 'DKV',
+                '4': 'Matematika'
+              };
+              return mapProdi[String(value)] || value; // Jika sudah berupa teks, tampilkan aslinya
+            }}
+            tick={{ fontSize: 11, fill: '#334155', fontWeight: 700 }}
+            width={135}
+          />
+
+          <Tooltip
+            content={<CustomTooltip unit="project" labelPrefix="Prodi " />}
+            cursor={{ fill: '#f8fafc' }}
+          />
+          <Bar dataKey="total" name="Total Project" fill="url(#barGrad)" radius={[0, 8, 8, 0]} barSize={20}>
+            <LabelList dataKey="total" content={<BarValueLabel />} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )}
+</div>
         </div>
 
         {/* ── MODERATION TABLE ── */}

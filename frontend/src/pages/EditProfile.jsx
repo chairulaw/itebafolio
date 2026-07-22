@@ -4,6 +4,7 @@ import {
   User, Lock, LogOut, Camera, Globe, Phone, Briefcase, GraduationCap, ChevronRight, X, Check
 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
@@ -115,7 +116,7 @@ export default function EditProfile() {
       setIsCropping(false);
     } catch (e) {
       console.error(e);
-      alert("Gagal memproses gambar!");
+      toast.error("Gagal memproses gambar!");
     }
   };
 
@@ -128,8 +129,8 @@ export default function EditProfile() {
       const submitData = new FormData();
       submitData.append('nama_user', formData.nama_user);
       
-      // Hanya kirim data akademik jika user bukan Pengunjung (Role 3)
-      if (userRole !== 3) {
+      // Keamanan Tambahan: Hanya kirim data akademik jika user adalah Admin (Role 1)
+      if (userRole === 1) {
         submitData.append('nim', formData.nim);
         submitData.append('prodi', formData.prodi);
         submitData.append('angkatan', formData.angkatan);
@@ -145,10 +146,10 @@ export default function EditProfile() {
 
       await api.put(`/users/${userData.id}`, submitData);
 
-      alert("Profil berhasil diperbarui!");
+      toast.success("Profil berhasil diperbarui!");
       navigate('/profile');
     } catch (error) {
-      alert("Gagal memperbarui profil: " + (error.response?.data?.message || error.message));
+      toast.error("Gagal memperbarui profil: " + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -157,6 +158,9 @@ export default function EditProfile() {
   const displayAvatar = avatarPreview
     ? avatarPreview
     : (formData.avatar ? `http://localhost:3000/uploads/${formData.avatar}` : DEFAULT_AVATAR);
+
+  // LOGIKA PENGUNCIAN: Jika role bukan 1 (Admin), maka input akademik akan dikunci
+  const isAkademikDisabled = userRole !== 1;
 
   return (
     <>
@@ -207,16 +211,22 @@ export default function EditProfile() {
                   <div className="space-y-6 pt-4">
                     <SectionTitle icon={<GraduationCap size={16} />} title="Informasi Akademik" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <InputGroup name="nim" value={formData.nim} onChange={handleChange} label="Nomor Induk Mahasiswa (NIM)" placeholder="12345678" type="number" disabled={true} />
+                      {/* NIM dikunci untuk mahasiswa */}
+                      <InputGroup name="nim" value={formData.nim} onChange={handleChange} label="Nomor Induk Mahasiswa (NIM)" placeholder="12345678" type="number" disabled={isAkademikDisabled} />
                       
-                      {/* Dropdown Prodi Khusus Mahasiswa */}
+                      {/* Dropdown Prodi dikunci untuk mahasiswa */}
                       <div className="relative group">
                         <label className="block text-[10px] font-black text-[#2C71B8] uppercase tracking-widest mb-2 ml-1">Program Studi</label>
                         <select
                           name="prodi"
                           value={formData.prodi}
                           onChange={handleChange}
-                          className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:bg-white transition-all font-medium text-gray-700 cursor-pointer"
+                          disabled={isAkademikDisabled}
+                          className={`w-full px-5 py-3.5 border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 transition-all font-medium ${
+                            isAkademikDisabled 
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                              : 'bg-gray-50/50 focus:bg-white text-gray-700 cursor-pointer'
+                          }`}
                         >
                           <option value="" disabled>Pilih Program Studi</option>
                           <option value="Sistem Informasi">Sistem Informasi</option>
@@ -226,7 +236,8 @@ export default function EditProfile() {
                         </select>
                       </div>
 
-                      <InputGroup name="angkatan" value={formData.angkatan} onChange={handleChange} label="Angkatan" placeholder="2022" type="number" />
+                      {/* Angkatan dikunci untuk mahasiswa */}
+                      <InputGroup name="angkatan" value={formData.angkatan} onChange={handleChange} label="Angkatan" placeholder="2022" type="number" disabled={isAkademikDisabled} />
                     </div>
                   </div>
                 )}
@@ -331,7 +342,7 @@ function SectionTitle({ icon, title }) {
   );
 }
 
-// Ditambahkan fitur "disabled" untuk input NIM
+// Komponen InputGroup
 function InputGroup({ label, placeholder, type = "text", icon = null, name, value, onChange, disabled = false }) {
   return (
     <div className="relative group">

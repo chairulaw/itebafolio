@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Iridescence from '../components/Iridescence';
 import { logoAuth } from '../assets/Assets';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 export default function Register() {
@@ -36,7 +37,7 @@ export default function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      return alert("Password dan Konfirmasi Password tidak cocok!");
+      return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
     setIsLoading(true);
@@ -53,11 +54,11 @@ export default function Register() {
 
       const response = await api.post('/auth/register', payload);
 
-      alert(response.data.message);
+      toast.success(response.data.message);
       navigate('/');
 
     } catch (error) {
-      alert(error.response?.data?.message || "Terjadi kesalahan pada server");
+      toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");
     } finally {
       setIsLoading(false);
     }

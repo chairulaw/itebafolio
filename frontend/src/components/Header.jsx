@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, ChevronDown, Menu, X, LogOut, Monitor, Code2, Palette, Calculator } from 'lucide-react';
+import { Search, User, ChevronDown, Menu, X, LogOut, Monitor, Code2, Palette, Calculator, AlertTriangle } from 'lucide-react';
 import { logoHeader } from '../assets/Assets';
 import { slugify } from '../utils/mockData';
 import toast from 'react-hot-toast';
@@ -30,13 +30,50 @@ export default function Header() {
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
 
+  // ========================================================
+  // PERBAIKAN: Fungsi Logout dengan Konfirmasi Custom Toast
+  // ========================================================
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast.success('Logout berhasil!');
-    setIsLoggedIn(false);
-    navigate('/');
+    setIsMobileMenuOpen(false); // Tutup menu mobile jika sedang terbuka
+
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[200px]">
+        <div className="flex items-center gap-2">
+          <AlertTriangle size={18} className="text-amber-500 shrink-0" />
+          <p className="font-semibold text-white text-sm">Yakin ingin keluar?</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id); // Tutup toast konfirmasi
+              
+              // Eksekusi proses logout
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              setIsLoggedIn(false);
+              navigate('/');
+              
+              // Munculkan pesan sukses
+              toast.success('Anda berhasil keluar.');
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors"
+          >
+            Ya, Keluar
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Biarkan toast terbuka sampai user memilih
+      position: 'top-center',
+    });
   };
+  // ========================================================
 
   const [activeIndex, setActiveIndex]   = useState(0);
   const [hoverIndex, setHoverIndex]     = useState(null);
@@ -91,10 +128,6 @@ export default function Header() {
     navigate(`/filter/${slugify(prodiName)}`);
   };
 
-  // ========================================================
-  // PERBAIKAN 1: Logika "Live Search" (Langsung Mencari)
-  // ========================================================
-  
   // Sinkronisasi teks pencarian dengan URL agar tidak hilang saat di-refresh
   useEffect(() => {
     if (location.pathname === '/search') {
@@ -123,7 +156,6 @@ export default function Header() {
       setIsMobileMenuOpen(false);
     }
   };
-  // ========================================================
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -450,7 +482,7 @@ export default function Header() {
                   </Link>
                 )}
                 {currentUser?.role_id === 1 && (
-                  <Link to="/admin-dashboard" onClick={() => setIsMobileMenuOpen(false)}
+                  <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}
                     className="w-full text-center py-3 rounded-2xl font-bold text-sm !text-white hover:!text-white
                       bg-gradient-to-r from-violet-600 to-purple-600
                       shadow-md shadow-purple-500/20 transition-transform active:scale-95">
@@ -463,7 +495,7 @@ export default function Header() {
                   Profil Saya
                 </Link>
                 <button
-                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                  onClick={handleLogout}
                   className="w-full text-center py-3 rounded-2xl font-semibold text-sm text-red-500
                     bg-red-50 border border-red-100 hover:bg-red-100 transition-colors active:scale-95">
                   Keluar

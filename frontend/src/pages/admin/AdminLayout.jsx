@@ -14,6 +14,7 @@ import {
   UserCircle2
 } from 'lucide-react';
 import { logoHeader } from '../../assets/Assets';
+import toast from 'react-hot-toast';
 import api from '../../utils/api'; // Pastikan path ini benar sesuai struktur Anda
 
 // Judul halaman berdasarkan rute aktif, dipakai di topbar
@@ -42,12 +43,38 @@ export default function AdminLayout() {
 
   const pageTitle = PAGE_TITLES[location.pathname] || 'Panel Admin';
 
-  const handleLogout = () => {
-    if (window.confirm("Yakin ingin keluar dari panel admin?")) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/login');
-    }
+const handleLogout = () => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[220px]">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-500 font-bold">⚠️</span>
+          <p className="font-semibold text-white text-sm">Yakin ingin keluar dari panel admin?</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              navigate('/login');
+              toast.success('Berhasil keluar dari panel admin.');
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors cursor-pointer"
+          >
+            Ya, Keluar
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center',
+    });
   };
 
   // Komponen NavLink dengan indikator aktif bergaya "bar"
