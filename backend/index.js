@@ -35,6 +35,11 @@ app.use(express.json());
 // Membuka akses folder uploads agar gambar profil bisa diakses oleh Frontend
 app.use("/uploads", express.static("public/uploads"));
 
+// --- HEALTH CHECK ---
+app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", uptime: process.uptime() });
+});
+
 // --- ROUTES ---
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

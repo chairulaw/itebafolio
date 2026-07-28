@@ -24,8 +24,8 @@ export default function Homepage() {
           api.get('/categories').catch(() => ({ data: [] }))
         ]);
         
-        setProjects(projectsRes.data);
-        setCategories(categoriesRes.data);
+        setProjects(Array.isArray(projectsRes.data) ? projectsRes.data : []);
+        setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
       } catch (error) {
         console.error("Gagal mengambil data:", error);
       } finally {
