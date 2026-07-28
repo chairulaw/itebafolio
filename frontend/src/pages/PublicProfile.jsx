@@ -71,7 +71,7 @@ export default function PublicProfile() {
   );
 
   const isPengunjung = profileData.role_id === 3;
-  const displayAvatar = profileData.avatar ? `http://localhost:3000/uploads/${profileData.avatar}` : DEFAULT_AVATAR;
+  const displayAvatar = profileData.avatar ? `/uploads/${profileData.avatar}` : DEFAULT_AVATAR;
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">

@@ -82,7 +82,7 @@ export default function CategoryBar() {
           {/* RENDER 2: Kategori Dinamis dari Database Hasil Input Admin */}
           {dynamicCategories.map((category) => {
             const bannerImg = category.image 
-              ? `http://localhost:3000/uploads/${category.image}`
+              ? `/uploads/${category.image}`
               : 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80';
 
             return (

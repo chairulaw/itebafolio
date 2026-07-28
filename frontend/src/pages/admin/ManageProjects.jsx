@@ -48,7 +48,7 @@ export default function ManageProjects() {
             likes: Number(p.likes_count) || 0,
             date: new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             status: 'published',
-            coverUrl: p.cover ? `http://localhost:3000/uploads/${p.cover}` : null
+            coverUrl: p.cover ? `/uploads/${p.cover}` : null
           };
         });
 

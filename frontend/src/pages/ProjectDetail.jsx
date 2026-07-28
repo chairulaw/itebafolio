@@ -202,7 +202,7 @@ export default function ProjectDetail() {
   if (!project) return null;
 
   const creatorName = project.user?.nama_user || "Nama akun";
-  const creatorAvatar = project.user?.avatar ? `http://localhost:3000/uploads/${project.user.avatar}` : DEFAULT_AVATAR;
+  const creatorAvatar = project.user?.avatar ? `/uploads/${project.user.avatar}` : DEFAULT_AVATAR;
 
   const categoryName = CATEGORY_MAP[project.kategori_id] || project.kategori_id || "Uncategorized";
 
@@ -236,7 +236,7 @@ export default function ProjectDetail() {
 
   const renderMediaBlock = (file) => {
     const type = getFileType(file);
-    const fileUrl = `http://localhost:3000/uploads/${file}`;
+    const fileUrl = `/uploads/${file}`;
 
     if (type === 'pdf') {
       return (
@@ -538,7 +538,7 @@ export default function ProjectDetail() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-7">
               {additionalFiles.map((file, idx) => {
-                const fileUrl = `http://localhost:3000/uploads/${file}`;
+                const fileUrl = `/uploads/${file}`;
                 const type = getFileType(file);
                 const isWide = type === 'pdf' || type === 'other';
 
@@ -706,7 +706,7 @@ export default function ProjectDetail() {
                       title={`Lihat Profil ${comment.user?.nama_user || "Anonim"}`}
                     >
                       <img
-                        src={comment.user?.avatar ? `http://localhost:3000/uploads/${comment.user.avatar}` : DEFAULT_AVATAR}
+                        src={comment.user?.avatar ? `/uploads/${comment.user.avatar}` : DEFAULT_AVATAR}
                         alt="Avatar"
                         className="w-full h-full object-cover"
                       />

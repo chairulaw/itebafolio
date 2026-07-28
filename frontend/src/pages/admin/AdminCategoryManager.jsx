@@ -85,7 +85,7 @@ export default function AdminCategoryManager() {
     setNamaKategori(category.nama_kategori);
     setDeskripsi(category.deskripsi || '');
     if (category.image) {
-      setBannerPreview(`http://localhost:3000/uploads/${category.image}`);
+      setBannerPreview(`/uploads/${category.image}`);
     } else {
       setBannerPreview(null);
     }
@@ -241,7 +241,7 @@ export default function AdminCategoryManager() {
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden shrink-0 border border-white flex items-center justify-center">
                       {category.image ? (
-                        <img src={`http://localhost:3000/uploads/${category.image}`} alt="" className="w-full h-full object-cover" />
+                        <img src={`/uploads/${category.image}`} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <ImageIcon size={18} className="text-slate-400" />
                       )}

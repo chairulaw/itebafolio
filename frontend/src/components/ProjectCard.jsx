@@ -31,12 +31,12 @@ export default function ProjectCard({ project, isOwner = false }) {
 
   // --- MAPPING DATA DARI DATABASE ---
   const coverUrl = project.cover
-    ? `http://localhost:3000/uploads/${project.cover}`
+    ? `/uploads/${project.cover}`
     : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80';
 
   const creatorName = project.user?.nama_user || "Mahasiswa ITEBA";
   const creatorAvatar = project.user?.avatar
-    ? `http://localhost:3000/uploads/${project.user.avatar}`
+    ? `/uploads/${project.user.avatar}`
     : DEFAULT_AVATAR;
 
   // --- HANDLER EDIT ---

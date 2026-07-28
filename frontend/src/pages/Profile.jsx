@@ -122,7 +122,7 @@ export default function Profile() {
 
   const isPengunjung = profileData.role_id === 3;
   const displayAvatar = profileData.avatar
-    ? `http://localhost:3000/uploads/${profileData.avatar}`
+    ? `/uploads/${profileData.avatar}`
     : DEFAULT_AVATAR;
 
  /* ── Derived stats (Menghitung Total Like & Views) ── */

@@ -90,7 +90,7 @@ export default function ManageProject() {
             isExisting: true,
             name: project.cover,
             size: 'Bawaan Server',
-            preview: `http://localhost:3000/uploads/${project.cover}`
+            preview: `/uploads/${project.cover}`
           });
         }
 

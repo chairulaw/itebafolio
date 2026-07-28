@@ -1,0 +1,14 @@
+module.exports = {
+  apps: [
+    {
+      name: 'itebafolio-backend',
+      cwd: __dirname,
+      script: 'index.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
+  ],
+};

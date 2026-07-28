@@ -71,7 +71,7 @@ export default function HeroSlider({ projects = [] }) {
             <img
               src={
                 project.cover
-                  ? `http://localhost:3000/uploads/${project.cover}`
+                  ? `/uploads/${project.cover}`
                   : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80'
               }
               alt={project.judul_project}

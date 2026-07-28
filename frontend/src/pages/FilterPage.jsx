@@ -93,7 +93,7 @@ export default function FilterPage() {
           ? categoryFromDb.deskripsi 
           : `Eksplorasi karya dan inovasi terbaru di bidang ${categoryFromDb.nama_kategori}.`,
     img: categoryFromDb.image 
-      ? `http://localhost:3000/uploads/${categoryFromDb.image}` 
+      ? `/uploads/${categoryFromDb.image}`
       : 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80'
   } : (fallbackData[slug] || {
     label: slug ? slug.replace(/-/g, ' ').toUpperCase() : 'EKSPLORASI',

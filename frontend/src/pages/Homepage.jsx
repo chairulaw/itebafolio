@@ -48,7 +48,7 @@ export default function Homepage() {
   const dynamicFilters = categories.map(cat => ({
     slug: cat.slug || generateSlug(cat.nama_kategori), // <-- FIX DISINI
     label: cat.nama_kategori,
-    image: cat.image ? `http://localhost:3000/uploads/${cat.image}` : 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&q=80'
+    image: cat.image ? `/uploads/${cat.image}` : 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&q=80'
   }));
 
   // 3. Gabungkan tanpa difilter ulang

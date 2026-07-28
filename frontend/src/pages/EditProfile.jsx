@@ -157,7 +157,7 @@ export default function EditProfile() {
 
   const displayAvatar = avatarPreview
     ? avatarPreview
-    : (formData.avatar ? `http://localhost:3000/uploads/${formData.avatar}` : DEFAULT_AVATAR);
+    : (formData.avatar ? `/uploads/${formData.avatar}` : DEFAULT_AVATAR);
 
   // LOGIKA PENGUNCIAN: Jika role bukan 1 (Admin), maka input akademik akan dikunci
   const isAkademikDisabled = userRole !== 1;
