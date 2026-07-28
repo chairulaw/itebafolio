@@ -32,7 +32,7 @@ export default function Register() {
     </div>
   ), []);
 
-  // --- HANDLER FUNGSI REGISTRASI ---
+  // --- HANDLER FUNGSI REGISTRASI & AUTO LOGIN ---
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -52,9 +52,22 @@ export default function Register() {
         angkatan: registerType === 'mahasiswa' ? angkatan : ''
       };
 
-      const response = await api.post('/auth/register', payload);
+      // 1. Eksekusi API Registrasi
+      await api.post('/auth/register', payload);
 
-      toast.success(response.data.message);
+      // 2. Langsung eksekusi API Login otomatis dengan email & password yang sama
+      const loginResponse = await api.post('/auth/login', {
+        email: email,
+        password: password,
+      });
+
+      // 3. Simpan Token dan Data User dari respons login ke LocalStorage
+      localStorage.setItem('token', loginResponse.data.token);
+      localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+
+      toast.success("Pendaftaran berhasil! Selamat datang di ITEBAFolio.");
+      
+      // 4. Arahkan ke halaman utama dengan state sudah login
       navigate('/');
 
     } catch (error) {
