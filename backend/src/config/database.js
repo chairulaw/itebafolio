@@ -6,7 +6,7 @@ dotenv.config();
 // Mengambil data dari variabel di .env
 const dbName = process.env.DB_NAME || "itebafolio";
 const dbUser = process.env.DB_USER || "root";
-const dbPass = process.env.DB_PASS || "";
+const dbPass = process.env.DB_PASSWORD || "";
 const dbHost = process.env.DB_HOST || "localhost";
 
 // Membuat instance koneksi Sequelize
