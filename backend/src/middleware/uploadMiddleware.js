@@ -64,7 +64,7 @@ export const uploadAvatar = upload;
 // Export untuk Project di projectRoutes.js (Nama sudah disamakan menjadi uploadProjectFiles)
 export const uploadProjectFiles = upload.fields([
     { name: 'cover', maxCount: 1 },
-    { name: 'highlight', maxCount: 10 },
+    { name: 'highlight', maxCount: 20 },
     { name: 'additional_media', maxCount: 10 }
 ]);
 
