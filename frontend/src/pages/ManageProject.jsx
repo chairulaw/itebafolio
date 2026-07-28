@@ -37,13 +37,12 @@ export default function ManageProject() {
   const [mainMediaFiles, setMainMediaFiles] = useState([]);
   const [additionalMediaFiles, setAdditionalMediaFiles] = useState([]);
 
-  const [categories, setCategories] = useState([]); // TAMBAHAN: Menyimpan kategori dari database
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditMode);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // TAMBAHAN: Mengambil daftar kategori dinamis dari Database
   useEffect(() => {
     api.get('/categories')
       .then(res => setCategories(res.data))
@@ -168,6 +167,7 @@ export default function ManageProject() {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(file => ({
         file: file,
+        isExisting: false,
         name: file.name,
         size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
       }));
@@ -179,6 +179,7 @@ export default function ManageProject() {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(file => ({
         file: file,
+        isExisting: false,
         name: file.name,
         size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
       }));
@@ -226,9 +227,17 @@ export default function ManageProject() {
         return;
       }
 
+      // --- PERBAIKAN: MENGIRIM DATA FILE LAMA UNTUK HIGHLIGHT ---
+      const existingHighlights = mainMediaFiles.filter(m => m.isExisting).map(m => m.name);
+      submitData.append('existing_highlight', JSON.stringify(existingHighlights));
+
       mainMediaFiles.forEach(media => {
         if (media.file) submitData.append('highlight', media.file);
       });
+
+      // --- PERBAIKAN: MENGIRIM DATA FILE LAMA UNTUK ADDITIONAL MEDIA ---
+      const existingAdditional = additionalMediaFiles.filter(m => m.isExisting).map(m => m.name);
+      submitData.append('existing_additional', JSON.stringify(existingAdditional));
 
       additionalMediaFiles.forEach(media => {
         if (media.file) submitData.append('additional_media', media.file);

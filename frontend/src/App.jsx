@@ -123,8 +123,11 @@ function App() {
           duration: 3000,
           style: {
             borderRadius: '10px',
-            background: '#746b6bff',
-            color: '#ffffffff',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            background: 'rgba(44, 113, 184, 0.95)', // Blue tint
+            backdropFilter: 'blur(12px)',
+            color: '#ffffff',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
           },
         }}
       />

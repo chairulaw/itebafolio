@@ -186,7 +186,6 @@ export const createProject = async (req, res) => {
 // [MAHASISWA & ADMIN] PUT: Edit project
 export const updateProject = async (req, res) => {
     try {
-        // --- PROTEKSI API: BLOKIR PENGUNJUNG EKSPLISIT ---
         if (req.user.role_id === 3) {
             return res.status(403).json({ message: "Akses Ditolak! Pengunjung umum tidak diizinkan mengedit karya." });
         }
@@ -204,19 +203,21 @@ export const updateProject = async (req, res) => {
 
         const coverPath = req.files?.['cover'] ? req.files['cover'][0].filename : project.cover;
 
-        const highlightString = req.files?.['highlight']
-            ? JSON.stringify(req.files['highlight'].map(f => f.filename))
-            : project.highlight;
+        // --- LOGIKA PENGGABUNGAN FILE (HIGHLIGHT) ---
+        // Ambil file lama yang dipertahankan dari frontend
+        const keptHighlights = req.body.existing_highlight ? JSON.parse(req.body.existing_highlight) : [];
+        // Ambil file baru yang diunggah
+        const newHighlights = req.files?.['highlight'] ? req.files['highlight'].map(f => f.filename) : [];
+        // Gabungkan keduanya
+        const finalHighlights = [...keptHighlights, ...newHighlights];
 
-        const additionalMediaString = req.files?.['additional_media']
-            ? JSON.stringify(req.files['additional_media'].map(f => f.filename))
-            : project.additional_media;
+        // --- LOGIKA PENGGABUNGAN FILE (ADDITIONAL) ---
+        const keptAdditional = req.body.existing_additional ? JSON.parse(req.body.existing_additional) : [];
+        const newAdditional = req.files?.['additional_media'] ? req.files['additional_media'].map(f => f.filename) : [];
+        const finalAdditional = [...keptAdditional, ...newAdditional];
 
-        // Cek kembali kata kasar saat update
         const textToCheck = `${judul_project} ${deskripsi}`;
         const profanityResult = checkProfanity(textToCheck);
-        
-        // --- TAMBAHAN AMAN: Ubah status jika hasil edit malah menjadi kasar ---
         const projectStatus = profanityResult.isViolating ? 'pending' : 'published';
 
         await Project.update(
@@ -226,14 +227,13 @@ export const updateProject = async (req, res) => {
                 link_project,
                 deskripsi,
                 cover: coverPath,
-                highlight: highlightString,
-                additional_media: additionalMediaString,
-                status: projectStatus // <-- Memperbarui status
+                highlight: JSON.stringify(finalHighlights), // Simpan hasil gabungan
+                additional_media: JSON.stringify(finalAdditional), // Simpan hasil gabungan
+                status: projectStatus
             },
             { where: { id: projectId } }
         );
 
-        // Catat pelanggaran baru jika ditemukan saat mengedit
         if (profanityResult.isViolating) {
             await ViolationLog.create({
                 tipe_entitas: 'Project',

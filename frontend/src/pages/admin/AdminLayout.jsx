@@ -107,14 +107,12 @@ const handleLogout = () => {
     </NavLink>
   );
 
-  // --- LOGIKA DEBOUNCE & FETCH PENCARIAN GLOBAL ---
   useEffect(() => {
     const delaySearch = setTimeout(async () => {
       if (searchQuery.trim().length >= 2) {
         setIsSearching(true);
         setShowDropdown(true);
         try {
-          // Menembak 3 API sekaligus secara paralel agar cepat
           const [usersRes, projectsRes, violationsRes] = await Promise.all([
             api.get('/users').catch(() => ({ data: [] })),
             api.get('/admin/projects').catch(() => ({ data: { data: [] } })),
@@ -123,7 +121,6 @@ const handleLogout = () => {
 
           const query = searchQuery.toLowerCase();
 
-          // Memfilter data di sisi klien (Ambil maksimal 3 teratas per kategori)
           const matchedUsers = (usersRes.data || []).filter(u =>
             u.nama_user?.toLowerCase().includes(query) ||
             u.nim?.toLowerCase().includes(query)
