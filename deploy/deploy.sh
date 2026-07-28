@@ -83,17 +83,24 @@ cd "$APP_DIR/backend"
 npm install --omit=dev
 
 if [ ! -f .env ]; then
-  echo ">> backend/.env belum ada, membuat template. WAJIB EDIT DB_PASSWORD sebelum lanjut!"
+  echo ">> backend/.env belum ada. Masukkan info database MySQL yang sudah Anda setup di VPS ini."
+  echo "   (tekan Enter untuk pakai nilai default dalam kurung)"
+  read -r -p "   DB_HOST [localhost]: " INPUT_DB_HOST
+  read -r -p "   DB_USER [root]: " INPUT_DB_USER
+  read -r -s -p "   DB_PASSWORD: " INPUT_DB_PASSWORD
+  echo
+  read -r -p "   DB_NAME [itebafolio]: " INPUT_DB_NAME
+
   cat > .env <<EOF
 PORT=3000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=itebafolio
+DB_HOST=${INPUT_DB_HOST:-localhost}
+DB_USER=${INPUT_DB_USER:-root}
+DB_PASSWORD=${INPUT_DB_PASSWORD}
+DB_NAME=${INPUT_DB_NAME:-itebafolio}
 JWT_SECRET=$(openssl rand -hex 32)
 EOF
-  echo ">> Edit dulu: $APP_DIR/backend/.env (isi DB_PASSWORD sesuai database yang sudah Anda setup), lalu jalankan ulang script ini."
-  exit 1
+  chmod 600 .env
+  echo ">> backend/.env berhasil dibuat."
 fi
 mkdir -p public/uploads
 
