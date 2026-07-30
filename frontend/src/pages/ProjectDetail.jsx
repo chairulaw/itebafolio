@@ -444,7 +444,7 @@ export default function ProjectDetail() {
                   target="_blank" rel="noreferrer"
                   className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[var(--ink)] !text-white hover:!text-white font-semibold text-[13px] md:text-[14px] tracking-wide shadow-[0_12px_30px_-10px_rgba(25,27,32,0.4)] hover:shadow-[0_16px_36px_-8px_rgba(25,27,32,0.45)] hover:bg-[var(--cobalt)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
                 >
-                  Lihat Tautan Eksternal
+                  Kunjungi Project
                   <ExternalLink size={16} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </a>
               </div>

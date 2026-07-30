@@ -30,10 +30,14 @@ const PORT = process.env.PORT || 3000;
 
 // --- MIDDLEWARE ---
 app.use(cors());
-app.use(express.json());
+
+// Tambahkan limit: '200mb' di dalam kurung
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 // Membuka akses folder uploads agar gambar profil bisa diakses oleh Frontend
 app.use("/uploads", express.static("public/uploads"));
+
 
 // --- HEALTH CHECK ---
 app.get("/api/health", (req, res) => {
