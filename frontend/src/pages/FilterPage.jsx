@@ -57,7 +57,14 @@ export default function FilterPage() {
 
     if (isProdiFilter) {
       const userProdi = project.user?.prodi || project.User?.prodi || '';
-      return generateSlug(userProdi) === slug;
+      let normalizedProdi = generateSlug(userProdi);
+      
+      // PERBAIKAN: Tangani anomali nama DKV agar cocok dengan slug URL 'dkv'
+      if (normalizedProdi === 'desain-komunikasi-visual') {
+        normalizedProdi = 'dkv';
+      }
+      
+      return normalizedProdi === slug;
     } else {
       // PENYARINGAN SUPER KETAT: Handle Project Lama (Teks) & Baru (ID)
       

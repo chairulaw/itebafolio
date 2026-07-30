@@ -441,14 +441,22 @@ export default function Dashboard() {
             axisLine={false}
             tickLine={false}
             tickFormatter={(value) => {
-              // Pemetaan manual ID angka ke Nama Prodi jika datanya masih berupa angka
+              // Pemetaan manual ID angka ke Nama Program Studi yang sudah diperbaiki
               const mapProdi = {
                 '1': 'Sistem Informasi',
                 '2': 'Teknik Komputer',
-                '3': 'DKV',
-                '4': 'Matematika'
+                '3': 'Matematika', // 3 adalah Matematika
+                '4': 'DKV',        // 4 adalah DKV
+                
+                // Tambahan proteksi jika data terbaca sebagai teks murni
+                'desain komunikasi visual': 'DKV',
+                'sistem informasi': 'Sistem Informasi',
+                'teknik komputer': 'Teknik Komputer',
+                'matematika': 'Matematika'
               };
-              return mapProdi[String(value)] || value; // Jika sudah berupa teks, tampilkan aslinya
+              
+              // Cek string angka maupun string teks (lowercase)
+              return mapProdi[String(value)] || mapProdi[String(value).toLowerCase()] || value; 
             }}
             tick={{ fontSize: 11, fill: '#334155', fontWeight: 700 }}
             width={135}
