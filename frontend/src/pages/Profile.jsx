@@ -197,10 +197,17 @@ export default function Profile() {
                 </h1>
 
                 {/* Academic info */}
-                {!isPengunjung && (
+{!isPengunjung && (
                   <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center justify-center md:justify-start flex-wrap gap-2">
+                    {/* Menampilkan NIM */}
+                    <span className="text-slate-700">{profileData.nim || "NIM Belum Diisi"}</span>
+                    <span className="text-slate-300">·</span>
+                    
+                    {/* Menampilkan Prodi */}
                     <span className="text-[#2C71B8]">{profileData.prodi || "Prodi Belum Diisi"}</span>
                     <span className="text-slate-300">·</span>
+                    
+                    {/* Menampilkan Angkatan */}
                     <span>Angkatan {profileData.angkatan || "—"}</span>
                   </p>
                 )}
@@ -236,11 +243,10 @@ export default function Profile() {
             STATISTICS — BENTO GRID (Mahasiswa only)
         ══════════════════════════════════════════════════════ */}
         {!isPengunjung && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-10">
             <StatCard icon={Layers}   label="Portfolio"   value={myProjects.length} gradient="bg-gradient-to-br from-blue-50 to-indigo-50"    iconColor="text-[#2C71B8]"  delay={0}   />
             <StatCard icon={Heart}    label="Total Suka"  value={totalLikes}         gradient="bg-gradient-to-br from-rose-50 to-pink-50"        iconColor="text-rose-500"    delay={60}  />
             <StatCard icon={Eye}      label="Total Dilihat" value={totalViews}       gradient="bg-gradient-to-br from-violet-50 to-purple-50"    iconColor="text-violet-500"  delay={120} />
-            <StatCard icon={Star}     label="Achievement" value="Top 10%"            gradient="bg-gradient-to-br from-amber-50 to-yellow-50"    iconColor="text-amber-500"   delay={180} />
           </div>
         )}
 

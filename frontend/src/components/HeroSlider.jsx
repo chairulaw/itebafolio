@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const AUTO_SLIDE_INTERVAL = 5000;
 
 export default function HeroSlider({ projects = [] }) {
-  const slides = projects.slice(0, 8); // batasi jumlah karya unggulan
+  const slides = projects.slice(0, 3); // batasi jumlah karya unggulan
 
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
