@@ -4,7 +4,8 @@ import { generateAccessToken } from "../utils/generateToken.js";
 
 // === REGISTER (PENDAFTARAN) ===
 export const register = async (req, res) => {
-   const { nama_user, email, password, nim, prodi } = req.body;
+   // 1. [PERBAIKAN] Tambahkan 'angkatan' di sini agar ditangkap dari frontend
+   const { nama_user, email, password, nim, prodi, angkatan } = req.body;
 
     try {
         let assignedRoleId = 3; // Default: 3 (Pengunjung)
@@ -27,6 +28,7 @@ export const register = async (req, res) => {
             password: hashedPassword,
             nim: nim || null,     // Pengunjung NIM-nya null
             prodi: prodi || null, // Pengunjung Prodi-nya null
+            angkatan: angkatan || null, // 2. [PERBAIKAN] Tambahkan 'angkatan' agar tersimpan di database
             role_id: assignedRoleId
         });
 

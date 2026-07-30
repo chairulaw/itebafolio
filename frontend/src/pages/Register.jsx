@@ -43,13 +43,14 @@ export default function Register() {
     setIsLoading(true);
     try {
       // Payload dinamis: Jika pengunjung, nim/prodi/angkatan dikirim kosong agar ditangani backend
-      const payload = {
+const payload = {
         nama_user: namaUser,
         email: email,
         password: password,
-        nim: registerType === 'mahasiswa' ? nim : '',
-        prodi: registerType === 'mahasiswa' ? prodi : '',
-        angkatan: registerType === 'mahasiswa' ? angkatan : ''
+        nim: registerType === 'mahasiswa' ? nim : null,
+        prodi: registerType === 'mahasiswa' ? prodi : null,
+        // Paksa menjadi angka (Number) untuk mahasiswa, dan null untuk pengunjung
+        angkatan: registerType === 'mahasiswa' ? Number(angkatan) : null 
       };
 
       // 1. Eksekusi API Registrasi
