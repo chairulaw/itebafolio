@@ -17,34 +17,51 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-// [PERBAIKAN]: Fungsi Update User yang bisa menerima null/kosong
+// [PERBAIKAN]: Fungsi Update User yang Kuat & Tahan Banting
 export const updateUser = async (req, res) => {
     try {
         if (req.user.role_id !== 1) return res.status(403).json({ message: "Akses ditolak." });
 
-        // TAMBAHAN: Tangkap angkatan, bio, website, dan no_wa dari req.body
         const { nama_user, email, nim, prodi, role_id, angkatan, bio, website, no_wa } = req.body;
         const user = await User.findByPk(req.params.id);
 
         if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
 
-        // Menggunakan undefined check agar bisa menerima nilai null (kosong)
+        // Tentukan Target Role
+        const targetRoleId = role_id !== undefined ? Number(role_id) : user.role_id;
+        const isPengunjung = targetRoleId === 3;
+
+        // 1. Validasi Email ITEBA (Hanya untuk Admin & Mahasiswa)
+        if (!isPengunjung && email && !email.endsWith('@iteba.ac.id')) {
+            return res.status(400).json({ message: "Mahasiswa dan Admin wajib menggunakan email @iteba.ac.id" });
+        }
+
+        // 2. Proteksi Super Admin (Opsional jika ID 1 adalah super admin)
+        if (Number(user.id) === 1 && targetRoleId !== 1) {
+            return res.status(400).json({ message: "Super Admin absolut tidak boleh diubah role-nya!" });
+        }
+
+        // 3. Update Database (Otomatis konversi string kosong "" menjadi null)
         await user.update({
             nama_user: nama_user !== undefined ? nama_user : user.nama_user,
             email: email !== undefined ? email : user.email,
-            nim: nim !== undefined ? nim : user.nim,
-            prodi: prodi !== undefined ? prodi : user.prodi,
-            role_id: role_id !== undefined ? role_id : user.role_id,
-            // TAMBAHAN: Masukkan ke fungsi update
-            angkatan: angkatan !== undefined ? angkatan : user.angkatan,
-            bio: bio !== undefined ? bio : user.bio,
-            website: website !== undefined ? website : user.website,
-            no_wa: no_wa !== undefined ? no_wa : user.no_wa
+            role_id: targetRoleId,
+            
+            // Logika Pembersihan: Jika dia Pengunjung, paksa data akademik jadi null.
+            // Jika bukan pengunjung tapi form dikirim kosong "", jadikan null agar tidak error 500.
+            nim: isPengunjung ? null : (nim === "" ? null : nim),
+            prodi: isPengunjung ? null : (prodi === "" ? null : prodi),
+            angkatan: isPengunjung ? null : (angkatan === "" ? null : angkatan),
+            
+            bio: bio === "" ? null : (bio !== undefined ? bio : user.bio),
+            website: isPengunjung ? null : (website === "" ? null : website),
+            no_wa: no_wa === "" ? null : (no_wa !== undefined ? no_wa : user.no_wa)
         });
 
         res.status(200).json({ success: true, message: "Data pengguna berhasil diperbarui!" });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Error saat update user:", error); // Muncul di PM2 logs
+        res.status(500).json({ success: false, message: "Terjadi kesalahan server: " + error.message });
     }
 };
 
