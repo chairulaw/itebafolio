@@ -243,7 +243,7 @@ export default function Profile() {
             STATISTICS — BENTO GRID (Mahasiswa only)
         ══════════════════════════════════════════════════════ */}
         {!isPengunjung && (
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-10">
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
             <StatCard icon={Layers}   label="Portfolio"   value={myProjects.length} gradient="bg-gradient-to-br from-blue-50 to-indigo-50"    iconColor="text-[#2C71B8]"  delay={0}   />
             <StatCard icon={Heart}    label="Total Suka"  value={totalLikes}         gradient="bg-gradient-to-br from-rose-50 to-pink-50"        iconColor="text-rose-500"    delay={60}  />
             <StatCard icon={Eye}      label="Total Dilihat" value={totalViews}       gradient="bg-gradient-to-br from-violet-50 to-purple-50"    iconColor="text-violet-500"  delay={120} />
