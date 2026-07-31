@@ -6,7 +6,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const AUTO_SLIDE_INTERVAL = 5000;
 
 export default function HeroSlider({ projects = [] }) {
-  const slides = projects.slice(0, 3); // batasi jumlah karya unggulan
+  // PERBAIKAN: Urutkan berdasarkan tanggal terbaru, lalu ambil 3 teratas
+  const slides = [...projects]
+    .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
+    .slice(0, 3);
 
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -23,8 +26,7 @@ export default function HeroSlider({ projects = [] }) {
   const goNext = useCallback(() => goTo(current + 1), [current, goTo]);
   const goPrev = useCallback(() => goTo(current - 1), [current, goTo]);
 
-  // Menyalakan ulang timer auto-slide (dipanggil saat mount, hover berubah,
-  // atau setelah user klik navigasi manual, supaya timer tidak "rebutan")
+  // Menyalakan ulang timer auto-slide
   const restartAutoSlide = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (slides.length <= 1 || isHovered) return;
@@ -53,7 +55,7 @@ export default function HeroSlider({ projects = [] }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* --- TRACK CAROUSEL: semua slide berjejer, digeser pakai translateX --- */}
+      {/* --- TRACK CAROUSEL --- */}
       <div
         className="flex h-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         style={{
@@ -80,7 +82,7 @@ export default function HeroSlider({ projects = [] }) {
               onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80'; }}
             />
 
-            {/* Gradient: hanya gelap di bagian bawah, makin pekat saat hover */}
+            {/* Gradient */}
             <div
               className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent transition-opacity duration-500 pointer-events-none ${
                 isHovered ? 'opacity-100' : 'opacity-70'
@@ -90,7 +92,7 @@ export default function HeroSlider({ projects = [] }) {
             {/* Info karya */}
             <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
               <span className="inline-block mb-3 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-blue-300">
-                Karya Unggulan
+                Karya Terbaru
               </span>
               <h3 className="font-title text-2xl md:text-4xl lg:text-5xl font-extrabold text-white drop-shadow-lg tracking-tight max-w-2xl leading-tight">
                 {project.judul_project}
