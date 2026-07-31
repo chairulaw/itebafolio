@@ -441,20 +441,21 @@ const statsRes = await api.get('/admin/dashboard');
           <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
           
           {/* PERBAIKAN DI SINI: Mengubah angka ID menjadi Nama Program Studi */}
+       {/* PERBAIKAN FINAL: Urutan ID disesuaikan dengan Database */}
           <YAxis
             dataKey="name"
             type="category"
             axisLine={false}
             tickLine={false}
             tickFormatter={(value) => {
-              // Pemetaan manual ID angka ke Nama Program Studi yang sudah diperbaiki
+              // Pemetaan manual ID angka ke Nama Program Studi
               const mapProdi = {
                 '1': 'Sistem Informasi',
-                '2': 'Teknik Komputer',
-                '3': 'Matematika', // 3 adalah Matematika
-                '4': 'DKV',        // 4 adalah DKV
+                '2': 'DKV',              // <--- ID 2 adalah DKV
+                '3': 'Teknik Komputer',  // <--- ID 3 adalah Teknik Komputer
+                '4': 'Matematika',       // <--- ID 4 adalah Matematika
                 
-                // Tambahan proteksi jika data terbaca sebagai teks murni
+                // Proteksi tambahan jika data terbaca sebagai teks murni
                 'desain komunikasi visual': 'DKV',
                 'sistem informasi': 'Sistem Informasi',
                 'teknik komputer': 'Teknik Komputer',
