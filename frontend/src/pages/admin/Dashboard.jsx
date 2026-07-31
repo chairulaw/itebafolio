@@ -137,15 +137,21 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const statsRes = await api.get('/admin/dashboard');
+const statsRes = await api.get('/admin/dashboard');
         setStats(statsRes.data.stats);
         setTrendData(statsRes.data.charts.trends);
 
-        // Menyimpan nama lengkap program studi agar informatif
-        const cats = (statsRes.data.charts.categories || []).map(c => ({
-          ...c,
-          fullName: c.name
-        }));
+        // DAFTAR PRODI VALID (ID atau Nama Teks)
+        const validProdi = ['1', '2', '3', '4', 'sistem informasi', 'teknik komputer', 'dkv', 'matematika', 'desain komunikasi visual'];
+
+        // FILTER: Hanya masukkan data yang ada di daftar valid
+        const cats = (statsRes.data.charts.categories || [])
+          .filter(c => validProdi.includes(String(c.name).toLowerCase()))
+          .map(c => ({
+            ...c,
+            fullName: c.name
+          }));
+          
         setCategoryData(cats);
 
         const logsRes = await api.get('/admin/violations');
