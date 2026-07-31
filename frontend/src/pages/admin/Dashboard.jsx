@@ -134,25 +134,49 @@ export default function Dashboard() {
   const [violations, setViolations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchAdminData = async () => {
       try {
-const statsRes = await api.get('/admin/dashboard');
+        const statsRes = await api.get('/admin/dashboard');
         setStats(statsRes.data.stats);
         setTrendData(statsRes.data.charts.trends);
 
-        // DAFTAR PRODI VALID (ID atau Nama Teks)
-        const validProdi = ['1', '2', '3', '4', 'sistem informasi', 'teknik komputer', 'dkv', 'matematika', 'desain komunikasi visual'];
+        // ========================================================
+        // [PERBAIKAN UTAMA]: Hitung Distribusi Prodi secara Akurat
+        // ========================================================
+        // Kita ambil data /projects agar bisa mengecek asal Prodi pembuatnya
+        const projectsRes = await api.get('/projects');
+        const allProjects = projectsRes.data;
 
-        // FILTER: Hanya masukkan data yang ada di daftar valid
-        const cats = (statsRes.data.charts.categories || [])
-          .filter(c => validProdi.includes(String(c.name).toLowerCase()))
-          .map(c => ({
-            ...c,
-            fullName: c.name
-          }));
+        // Siapkan wadah hitungan untuk masing-masing prodi
+        const prodiCounts = {
+          'Sistem Informasi': 0,
+          'DKV': 0,
+          'Teknik Komputer': 0,
+          'Matematika': 0
+        };
+
+        // Hitung satu per satu
+        allProjects.forEach(project => {
+          const userProdi = (project.user?.prodi || project.User?.prodi || '').toLowerCase().trim();
           
-        setCategoryData(cats);
+          if (userProdi === 'sistem informasi') prodiCounts['Sistem Informasi']++;
+          else if (userProdi === 'desain komunikasi visual' || userProdi === 'dkv') prodiCounts['DKV']++;
+          else if (userProdi === 'teknik komputer') prodiCounts['Teknik Komputer']++;
+          else if (userProdi === 'matematika') prodiCounts['Matematika']++;
+        });
+
+        // Format data agar sesuai dengan yang diminta oleh chart Recharts
+        const formattedProdiData = [
+          { name: 'Sistem Informasi', total: prodiCounts['Sistem Informasi'] },
+          { name: 'DKV', total: prodiCounts['DKV'] },
+          { name: 'Teknik Komputer', total: prodiCounts['Teknik Komputer'] },
+          { name: 'Matematika', total: prodiCounts['Matematika'] }
+        ].filter(item => item.total > 0); // Hanya tampilkan prodi yang sudah punya karya
+
+        // Masukkan data yang sudah matang ini ke state
+        setCategoryData(formattedProdiData);
+        // ========================================================
 
         const logsRes = await api.get('/admin/violations');
         
@@ -441,30 +465,11 @@ const statsRes = await api.get('/admin/dashboard');
           <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
           
           {/* PERBAIKAN DI SINI: Mengubah angka ID menjadi Nama Program Studi */}
-       {/* PERBAIKAN FINAL: Urutan ID disesuaikan dengan Database */}
-          <YAxis
+<YAxis
             dataKey="name"
             type="category"
             axisLine={false}
             tickLine={false}
-            tickFormatter={(value) => {
-              // Pemetaan manual ID angka ke Nama Program Studi
-              const mapProdi = {
-                '1': 'Sistem Informasi',
-                '2': 'DKV',              // <--- ID 2 adalah DKV
-                '3': 'Teknik Komputer',  // <--- ID 3 adalah Teknik Komputer
-                '4': 'Matematika',       // <--- ID 4 adalah Matematika
-                
-                // Proteksi tambahan jika data terbaca sebagai teks murni
-                'desain komunikasi visual': 'DKV',
-                'sistem informasi': 'Sistem Informasi',
-                'teknik komputer': 'Teknik Komputer',
-                'matematika': 'Matematika'
-              };
-              
-              // Cek string angka maupun string teks (lowercase)
-              return mapProdi[String(value)] || mapProdi[String(value).toLowerCase()] || value; 
-            }}
             tick={{ fontSize: 11, fill: '#334155', fontWeight: 700 }}
             width={135}
           />
