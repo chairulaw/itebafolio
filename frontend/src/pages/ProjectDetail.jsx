@@ -6,17 +6,6 @@ import api from "../utils/api";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
 
-// --- KAMUS TRANSLASI KATEGORI ---
-const CATEGORY_MAP = {
-  1: 'Frontend Web Development',
-  2: 'Backend / Sistem Informasi',
-  3: 'UI/UX Design',
-  4: 'Desain Grafis / Branding',
-  5: 'Aplikasi Mobile',
-  6: 'Penelitian / Skripsi',
-  7: 'Lainnya'
-};
-
 // Grain texture (noise) sebagai data-uri, dipakai sebagai lapisan tekstur "kertas"
 const GRAIN_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E";
 
@@ -89,6 +78,7 @@ export default function ProjectDetail() {
 
   const [project, setProject] = useState(null);
   const [comments, setComments] = useState([]);
+  const [categories, setCategories] = useState([]); // <--- State Kategori Baru
   const [isLoading, setIsLoading] = useState(true);
 
   const [liked, setLiked] = useState(false);
@@ -112,7 +102,13 @@ export default function ProjectDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const projectRes = await api.get(`/projects/${id}`);
+        // PERBAIKAN: Gunakan Promise.all untuk mengambil semua data sekaligus
+        const [projectRes, commentsRes, categoriesRes] = await Promise.all([
+          api.get(`/projects/${id}`),
+          api.get(`/projects/${id}/comments`),
+          api.get('/categories').catch(() => ({ data: [] }))
+        ]);
+
         setProject(projectRes.data);
         setLikeCount(projectRes.data.likes?.length || 0);
 
@@ -121,8 +117,8 @@ export default function ProjectDetail() {
           setLiked(hasLiked);
         }
 
-        const commentsRes = await api.get(`/projects/${id}/comments`);
         setComments(commentsRes.data);
+        setCategories(categoriesRes.data); // <--- SIMPAN DATA KATEGORI
       } catch (error) {
         toast.error("Karya tidak ditemukan");
         navigate('/');
@@ -131,7 +127,7 @@ export default function ProjectDetail() {
       }
     };
     fetchData();
-  }, [id, navigate]);
+  }, [id, navigate]); 
 
   const handleLike = async () => {
     try {
@@ -204,7 +200,11 @@ export default function ProjectDetail() {
   const creatorName = project.user?.nama_user || "Nama akun";
   const creatorAvatar = project.user?.avatar ? `/uploads/${project.user.avatar}` : DEFAULT_AVATAR;
 
-  const categoryName = CATEGORY_MAP[project.kategori_id] || project.kategori_id || "Uncategorized";
+  // PERBAIKAN: Cocokkan ID dari project dengan ID yang ada di database kategori
+  const matchedCategory = categories.find(c => String(c.id) === String(project.kategori_id));
+  const categoryName = matchedCategory 
+    ? matchedCategory.nama_kategori 
+    : (project.kategori_id || "Uncategorized");
 
   const createdDate = project.created_at ? new Date(project.created_at) : null;
   const formattedDate = createdDate
