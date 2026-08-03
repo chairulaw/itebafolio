@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import HeroSlider from '../components/HeroSlider';
@@ -53,6 +53,32 @@ export default function Homepage() {
 
   // 3. Gabungkan tanpa difilter ulang
   const allFilters = [...baseFilters, ...dynamicFilters];
+
+  const displayProjects = useMemo(() => {
+    if (!projects || projects.length === 0) return [];
+    
+    let sorted = [...projects]; 
+    const randomMode = Math.floor(Math.random() * 4); 
+
+    if (randomMode === 0) {
+      sorted.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+    } 
+    else if (randomMode === 1) {
+      sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } 
+    else if (randomMode === 2) {
+      sorted.sort((a, b) => {
+        const likesA = a.likes_count || (a.likes ? a.likes.length : 0);
+        const likesB = b.likes_count || (b.likes ? b.likes.length : 0);
+        return likesB - likesA;
+      });
+    } 
+    else {
+      sorted.sort(() => Math.random() - 0.5);
+    }
+
+    return sorted.slice(0, 12);
+  }, [projects]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -120,24 +146,25 @@ export default function Homepage() {
 
 {/* --- AREA GRID PROJECT --- */}
         {isLoading ? (
-          <div className="flex justify-center items-center py-20 text-gray-500">Memuat karya-karya luar biasa...</div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3, ease: smoothEasing }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12"
-          >
-            {displayProjects.length > 0 ? (
-              // Menggunakan displayProjects yang sudah melalui penyortiran dinamis
-              displayProjects.map(project => (
-                <ProjectCard key={project.id} project={project} />
-              ))
-            ) : (
-              <div className="col-span-full text-center text-gray-400 py-10">Belum ada karya yang diunggah.</div>
-            )}
-          </motion.div>
-        )}
+        <div className="flex justify-center items-center py-20 text-gray-500">Memuat karya-karya luar biasa...</div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          // Sesuaikan smoothEasing dengan yang Anda miliki di file ini
+          transition={{ duration: 1, delay: 0.3 }} 
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12"
+        >
+          {displayProjects.length > 0 ? (
+            // Kita petakan variabel displayProjects yang sudah diacak
+            displayProjects.map(project => (
+              <ProjectCard key={project.id} project={project} />
+            ))
+          ) : (
+            <div className="col-span-full text-center text-gray-400 py-10">Belum ada karya yang diunggah.</div>
+          )}
+        </motion.div>
+      )}
 
       </main>
     </div>
