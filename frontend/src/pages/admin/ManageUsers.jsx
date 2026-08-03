@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserX, Edit2, X, Users as UsersIcon } from 'lucide-react';
+import { Search, UserX, Edit2, X, Users as UsersIcon, Shield, Key, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
 
@@ -63,7 +63,8 @@ export default function ManageUsers() {
 
   // 3. FUNGSI BUKA MODAL EDIT (Memuat Data User)
   const handleEditClick = (user) => {
-    setSelectedUser({ ...user }); // Duplikat data ke state
+    // Duplikat data ke state dan tambahkan field password kosong
+    setSelectedUser({ ...user, password: '' }); 
     setIsEditModalOpen(true);
   };
 
@@ -86,7 +87,6 @@ export default function ManageUsers() {
       const payload = {
         nama_user: selectedUser.nama_user,
         email: selectedUser.email,
-        // Frontend mengirim nilai kosong "", Backend yang akan menjadikannya null
         nim: selectedUser.nim,
         prodi: selectedUser.prodi,
         angkatan: selectedUser.angkatan,
@@ -95,6 +95,11 @@ export default function ManageUsers() {
         no_wa: selectedUser.no_wa,
         role_id: newRoleId
       };
+
+      // Hanya kirim password jika admin mengisi field password
+      if (selectedUser.password && selectedUser.password.trim() !== "") {
+        payload.password = selectedUser.password;
+      }
 
       await api.put(`/admin/users/${selectedUser.id}`, payload);
 
@@ -223,7 +228,7 @@ export default function ManageUsers() {
       </div>
 
       {/* ========================================= */}
-      {/* MODAL EDIT PENGGUNA (DINAMIS)            */}
+      {/* MODAL EDIT PENGGUNA (DINAMIS & TERSTRUKTUR)*/}
       {/* ========================================= */}
       {isEditModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
@@ -241,10 +246,14 @@ export default function ManageUsers() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveChanges} className="p-7 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* HAK AKSES (ROLE) DI ATAS AGAR MUDAH DIUBAH */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Hak Akses (Role)</label>
+            <form onSubmit={handleSaveChanges} className="p-7 space-y-6 max-h-[75vh] overflow-y-auto">
+              
+              {/* --- SECTION 1: ROLE --- */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
+                  <Shield size={16} className="text-[#2C71B8]" />
+                  <h4 className="text-sm font-bold">1. Hak Akses (Role)</h4>
+                </div>
                 <select
                   value={selectedUser.role}
                   onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
@@ -256,8 +265,46 @@ export default function ManageUsers() {
                 </select>
               </div>
 
-              {/* NAMA LENGKAP & EMAIL */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* --- SECTION 2: AKUN --- */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
+                  <Key size={16} className="text-[#2C71B8]" />
+                  <h4 className="text-sm font-bold">2. Informasi Akun</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Alamat Email</label>
+                    <input
+                      type="email"
+                      value={selectedUser.email}
+                      onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                    {selectedUser.role !== 'Pengunjung' && (
+                      <p className="text-[10px] text-blue-500 mt-1">* Wajib menggunakan @iteba.ac.id</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Password Baru</label>
+                    <input
+                      type="password"
+                      value={selectedUser.password || ''}
+                      onChange={(e) => setSelectedUser({ ...selectedUser, password: e.target.value })}
+                      placeholder="Kosongkan jika tidak diubah"
+                      className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* --- SECTION 3: PROFIL --- */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
+                  <UserCircle size={16} className="text-[#2C71B8]" />
+                  <h4 className="text-sm font-bold">3. Data Profil</h4>
+                </div>
+                
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nama Lengkap</label>
                   <input
@@ -268,96 +315,80 @@ export default function ManageUsers() {
                     required
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Alamat Email</label>
-                  <input
-                    type="email"
-                    value={selectedUser.email}
-                    onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
-                    required
-                  />
-                  {selectedUser.role !== 'Pengunjung' && (
-                    <p className="text-[10px] text-blue-500 mt-1">* Wajib menggunakan @iteba.ac.id</p>
-                  )}
-                </div>
-              </div>
 
-              {/* FORM DINAMIS: NIM, PRODI, ANGKATAN (Tampil jika Admin/Mahasiswa) */}
-              {selectedUser.role !== 'Pengunjung' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">NIM</label>
-                    <input
-                      type="text"
-                      value={selectedUser.nim}
-                      onChange={(e) => setSelectedUser({ ...selectedUser, nim: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Program Studi</label>
-                    <select
-                      value={selectedUser.prodi}
-                      onChange={(e) => setSelectedUser({ ...selectedUser, prodi: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200 appearance-none"
-                    >
-                      <option value="Sistem Informasi">Sistem Informasi</option>
-                      <option value="Desain Komunikasi Visual">Desain Komunikasi Visual</option>
-                      <option value="Teknik Komputer">Teknik Komputer</option>
-                      <option value="Matematika">Matematika</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Angkatan</label>
-                    <input
-                      type="number"
-                      value={selectedUser.angkatan}
-                      placeholder="Cth: 2022"
-                      onChange={(e) => setSelectedUser({ ...selectedUser, angkatan: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* WEBSITE & NOMOR WA */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nomor WhatsApp</label>
-                  <input
-                    type="text"
-                    value={selectedUser.no_wa}
-                    placeholder="08123456789"
-                    onChange={(e) => setSelectedUser({ ...selectedUser, no_wa: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
-                  />
-                </div>
-                {/* Website hanya untuk Mahasiswa/Admin */}
+                {/* FORM DINAMIS: NIM, PRODI, ANGKATAN (Tampil jika Admin/Mahasiswa) */}
                 {selectedUser.role !== 'Pengunjung' && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">NIM</label>
+                      <input
+                        type="text"
+                        value={selectedUser.nim}
+                        onChange={(e) => setSelectedUser({ ...selectedUser, nim: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Program Studi</label>
+                      <select
+                        value={selectedUser.prodi}
+                        onChange={(e) => setSelectedUser({ ...selectedUser, prodi: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200 appearance-none"
+                      >
+                        <option value="Sistem Informasi">Sistem Informasi</option>
+                        <option value="Desain Komunikasi Visual">Desain Komunikasi Visual</option>
+                        <option value="Teknik Komputer">Teknik Komputer</option>
+                        <option value="Matematika">Matematika</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Angkatan</label>
+                      <input
+                        type="number"
+                        value={selectedUser.angkatan}
+                        placeholder="Cth: 2022"
+                        onChange={(e) => setSelectedUser({ ...selectedUser, angkatan: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Website / Portfolio</label>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nomor WhatsApp</label>
                     <input
                       type="text"
-                      value={selectedUser.website}
-                      placeholder="https://..."
-                      onChange={(e) => setSelectedUser({ ...selectedUser, website: e.target.value })}
+                      value={selectedUser.no_wa}
+                      placeholder="08123456789"
+                      onChange={(e) => setSelectedUser({ ...selectedUser, no_wa: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
                     />
                   </div>
-                )}
-              </div>
+                  {selectedUser.role !== 'Pengunjung' && (
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Website / Portfolio</label>
+                      <input
+                        type="text"
+                        value={selectedUser.website}
+                        placeholder="https://..."
+                        onChange={(e) => setSelectedUser({ ...selectedUser, website: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200"
+                      />
+                    </div>
+                  )}
+                </div>
 
-              {/* BIO SINGKAT */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bio Singkat</label>
-                <textarea
-                  value={selectedUser.bio}
-                  rows={2}
-                  placeholder="Deskripsi singkat mengenai pengguna..."
-                  onChange={(e) => setSelectedUser({ ...selectedUser, bio: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200 resize-none"
-                />
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bio Singkat</label>
+                  <textarea
+                    value={selectedUser.bio}
+                    rows={2}
+                    placeholder="Deskripsi singkat mengenai pengguna..."
+                    onChange={(e) => setSelectedUser({ ...selectedUser, bio: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50/80 border border-gray-200/80 rounded-xl text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/15 focus:border-[#2C71B8]/50 focus:bg-white transition-all duration-200 resize-none"
+                  />
+                </div>
               </div>
 
               {/* TOMBOL AKSI */}
