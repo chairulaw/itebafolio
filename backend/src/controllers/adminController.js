@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import bcrypt from 'bcryptjs';
 // MENGIMPOR MODEL YANG DIBUTUHKAN, TERMASUK COMMENT
 import { User, Project, ViolationLog, Comment } from '../models/index.js';
 
@@ -22,7 +23,8 @@ export const updateUser = async (req, res) => {
     try {
         if (req.user.role_id !== 1) return res.status(403).json({ message: "Akses ditolak." });
 
-        const { nama_user, email, nim, prodi, role_id, angkatan, bio, website, no_wa } = req.body;
+        // 1. [PERBAIKAN] Tambahkan 'password' pada destructuring req.body
+        const { nama_user, email, nim, prodi, role_id, angkatan, bio, website, no_wa, password } = req.body;
         const user = await User.findByPk(req.params.id);
 
         if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
@@ -41,8 +43,8 @@ export const updateUser = async (req, res) => {
             return res.status(400).json({ message: "Super Admin absolut tidak boleh diubah role-nya!" });
         }
 
-        // 3. Update Database (Otomatis konversi string kosong "" menjadi null)
-        await user.update({
+        // 3. [PERBAIKAN] Siapkan objek data yang akan diupdate
+        let updateData = {
             nama_user: nama_user !== undefined ? nama_user : user.nama_user,
             email: email !== undefined ? email : user.email,
             role_id: targetRoleId,
@@ -56,7 +58,16 @@ export const updateUser = async (req, res) => {
             bio: bio === "" ? null : (bio !== undefined ? bio : user.bio),
             website: isPengunjung ? null : (website === "" ? null : website),
             no_wa: no_wa === "" ? null : (no_wa !== undefined ? no_wa : user.no_wa)
-        });
+        };
+
+        // 4. [PERBAIKAN] Logika Hashing Password (Hanya dieksekusi jika password diisi)
+        if (password && password.trim() !== "") {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateData.password = hashedPassword;
+        }
+
+        // 5. Update Database
+        await user.update(updateData);
 
         res.status(200).json({ success: true, message: "Data pengguna berhasil diperbarui!" });
     } catch (error) {
