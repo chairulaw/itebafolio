@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Heart, Eye, Edit2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -63,6 +63,41 @@ export default function ProjectCard({ project, isOwner = false }) {
       }
     }
   };
+
+  // --- LOGIKA PENYORTIRAN DINAMIS & ACAK ---
+  const displayProjects = useMemo(() => {
+    if (!projects || projects.length === 0) return [];
+    
+    // Copy array agar tidak merusak data asli
+    let sorted = [...projects]; 
+    
+    // Menghasilkan angka acak dari 0 sampai 3
+    const randomMode = Math.floor(Math.random() * 4); 
+
+    if (randomMode === 0) {
+      // Mode 0: Berdasarkan Terbaru (Newest)
+      sorted.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+    } 
+    else if (randomMode === 1) {
+      // Mode 1: Berdasarkan Views Terbanyak
+      sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } 
+    else if (randomMode === 2) {
+      // Mode 2: Berdasarkan Likes Terbanyak
+      sorted.sort((a, b) => {
+        const likesA = a.likes_count || (a.likes ? a.likes.length : 0);
+        const likesB = b.likes_count || (b.likes ? b.likes.length : 0);
+        return likesB - likesA;
+      });
+    } 
+    else {
+      // Mode 3: Acak Murni (Shuffle)
+      sorted.sort(() => Math.random() - 0.5);
+    }
+
+    // Ambil maksimal 12 data setelah diurutkan
+    return sorted.slice(0, 12);
+  }, [projects]); // Logika ini hanya akan dijalankan ulang jika data 'projects' dari API berubah
 
   return (
     <div className="group flex flex-col h-full w-full">

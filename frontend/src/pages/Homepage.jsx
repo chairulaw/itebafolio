@@ -118,7 +118,7 @@ export default function Homepage() {
           ))}
         </motion.div>
 
-        {/* --- AREA GRID PROJECT --- */}
+{/* --- AREA GRID PROJECT --- */}
         {isLoading ? (
           <div className="flex justify-center items-center py-20 text-gray-500">Memuat karya-karya luar biasa...</div>
         ) : (
@@ -128,8 +128,9 @@ export default function Homepage() {
             transition={{ duration: 1, delay: 0.3, ease: smoothEasing }}
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12"
           >
-            {projects.length > 0 ? (
-              projects.slice(0, 12).reverse().map(project => (
+            {displayProjects.length > 0 ? (
+              // Menggunakan displayProjects yang sudah melalui penyortiran dinamis
+              displayProjects.map(project => (
                 <ProjectCard key={project.id} project={project} />
               ))
             ) : (
