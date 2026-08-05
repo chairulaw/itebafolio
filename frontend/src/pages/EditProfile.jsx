@@ -129,7 +129,6 @@ export default function EditProfile() {
       const submitData = new FormData();
       submitData.append('nama_user', formData.nama_user);
       
-      // Keamanan Tambahan: Hanya kirim data akademik jika user adalah Admin (Role 1)
       if (userRole === 1) {
         submitData.append('nim', formData.nim);
         submitData.append('prodi', formData.prodi);
@@ -159,62 +158,90 @@ export default function EditProfile() {
     ? avatarPreview
     : (formData.avatar ? `/uploads/${formData.avatar}` : DEFAULT_AVATAR);
 
-  // LOGIKA PENGUNCIAN: Jika role bukan 1 (Admin), maka input akademik akan dikunci
   const isAkademikDisabled = userRole !== 1;
 
   return (
     <>
-      <div className="min-h-screen bg-[#FBFBFB] flex flex-col relative">
-        <main className="flex-1 max-w-6xl mx-auto px-6 md:px-8 pt-10 pb-20 flex flex-col md:flex-row gap-10 w-full">
-
-          <div className="flex-1 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-10 py-8 border-b border-gray-50">
+      <div className="min-h-screen bg-[#FBFBFB] flex flex-col pb-20">
+        
+        {/* Main Container diperlebar ke max-w-6xl */}
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-6 pt-8 md:pt-10">
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-10">
+            
+            {/* Header Form */}
+            <div className="border-b border-gray-50 pb-4 mb-8">
               <h2 className="text-2xl font-title font-black text-gray-900 tracking-tight">Edit Profil</h2>
               <p className="text-sm text-gray-400 font-medium">Atur informasi publik dan identitas Anda</p>
             </div>
 
-            <div className="p-10">
-              <div className="flex flex-col items-center mb-12">
-                <input
-                  type="file"
-                  id="avatarUpload"
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
-                  onChange={handleFileChange}
-                />
-                <div
-                  className="relative group cursor-pointer w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white shadow-xl overflow-hidden"
-                  onClick={() => document.getElementById('avatarUpload').click()}
-                >
-                  <img
-                    src={displayAvatar}
-                    alt="Profile"
-                    className="w-full h-full object-cover transition-transform duration-500"
+            <form className="grid grid-cols-1 lg:grid-cols-12 gap-10" onSubmit={handleSubmit}>
+              
+              {/* KOLOM KIRI (4 dari 12 bagian): Khusus Avatar dan Bio */}
+              <div className="lg:col-span-4 space-y-8">
+                
+                {/* Section Avatar */}
+                <div className="flex flex-col items-center bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
+                  <input
+                    type="file"
+                    id="avatarUpload"
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    onChange={handleFileChange}
                   />
-                  <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="text-white" size={32} />
+                  <div
+                    className="relative group cursor-pointer w-36 h-36 rounded-full border-4 border-white shadow-xl overflow-hidden mb-4"
+                    onClick={() => document.getElementById('avatarUpload').click()}
+                  >
+                    <img
+                      src={displayAvatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="text-white" size={32} />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800">Foto Profil</h3>
+                  <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">
+                    Klik foto untuk mengubah
+                  </p>
+                </div>
+
+                {/* Section Bio Singkat */}
+                <div className="space-y-4">
+                  <SectionTitle icon={<User size={16} />} title="Tentang Dirimu" />
+                  <div>
+                    <label className="block text-[10px] font-black text-[#2C71B8] uppercase tracking-widest mb-2 ml-1">Bio Singkat</label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      placeholder="Ceritakan sedikit tentang diri Anda..."
+                      className="w-full p-5 bg-gray-50/50 border border-gray-100 rounded-3xl h-[180px] text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:bg-white transition-all resize-none leading-relaxed"
+                    ></textarea>
                   </div>
                 </div>
-                <p className="mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Klik untuk ganti foto</p>
+
               </div>
 
-              <form className="space-y-8" onSubmit={handleSubmit}>
-                <div className="space-y-6">
+              {/* KOLOM KANAN (8 dari 12 bagian): Form Data Lengkap */}
+              <div className="lg:col-span-8 space-y-8">
+                
+                {/* Informasi Dasar */}
+                <div className="space-y-4">
                   <SectionTitle icon={<User size={16} />} title="Informasi Dasar" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputGroup name="nama_user" value={formData.nama_user} onChange={handleChange} label="Nama Lengkap" placeholder="Nama Lengkap" />
+                  <div className="grid grid-cols-1 gap-6">
+                    <InputGroup name="nama_user" value={formData.nama_user} onChange={handleChange} label="Nama Lengkap" placeholder="Ketik nama lengkap Anda" />
                   </div>
                 </div>
 
-                {/* SAKLAR LOGIKA: Sembunyikan Info Akademik jika Pengunjung (role_id === 3) */}
+                {/* Informasi Akademik (Disembunyikan jika Pengunjung) */}
                 {userRole !== 3 && (
-                  <div className="space-y-6 pt-4">
+                  <div className="space-y-4 pt-4">
                     <SectionTitle icon={<GraduationCap size={16} />} title="Informasi Akademik" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* NIM dikunci untuk mahasiswa */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <InputGroup name="nim" value={formData.nim} onChange={handleChange} label="Nomor Induk Mahasiswa (NIM)" placeholder="12345678" type="number" disabled={isAkademikDisabled} />
                       
-                      {/* Dropdown Prodi dikunci untuk mahasiswa */}
                       <div className="relative group">
                         <label className="block text-[10px] font-black text-[#2C71B8] uppercase tracking-widest mb-2 ml-1">Program Studi</label>
                         <select
@@ -236,44 +263,41 @@ export default function EditProfile() {
                         </select>
                       </div>
 
-                      {/* Angkatan dikunci untuk mahasiswa */}
                       <InputGroup name="angkatan" value={formData.angkatan} onChange={handleChange} label="Angkatan" placeholder="2022" type="number" disabled={isAkademikDisabled} />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-6 pt-4">
-                  <SectionTitle icon={<User size={16} />} title="Tentang Dirimu" />
-                  <div>
-                    <label className="block text-[10px] font-black text-[#2C71B8] uppercase tracking-widest mb-2 ml-1">Bio Singkat</label>
-                    <textarea
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleChange}
-                      placeholder="Ceritakan sedikit tentang diri Anda..."
-                      className="w-full p-5 bg-gray-50/50 border border-gray-100 rounded-3xl h-36 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:bg-white transition-all resize-none"
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div className="space-y-6 pt-4">
-                  <SectionTitle icon={<Globe size={16} />} title="Kontak & Media" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Kontak & Media */}
+                <div className="space-y-4 pt-4">
+                  <SectionTitle icon={<Globe size={16} />} title="Kontak & Media Sosial" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <InputGroup name="website" value={formData.website} onChange={handleChange} label="Website / Portfolio" placeholder="www.websiteanda.com" icon={<Globe size={14} />} />
                     <InputGroup name="no_wa" value={formData.no_wa} onChange={handleChange} label="Nomor WhatsApp" placeholder="08123456789" icon={<Phone size={14} />} type="number" />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-4 pt-10 border-t border-gray-50">
-                  <button type="button" onClick={() => navigate('/profile')} className="px-8 py-3.5 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">
-                    Batalkan
-                  </button>
-                  <button type="submit" disabled={isLoading} className="px-10 py-3.5 bg-[#2C71B8] text-white rounded-2xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:bg-blue-300">
-                    {isLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+
+              {/* AREA TOMBOL AKSI (Full Width Bawah) */}
+              <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-end gap-4 pt-8 border-t border-gray-100 mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => navigate('/profile')} 
+                  className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-200"
+                >
+                  Batalkan
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="w-full sm:w-auto px-10 py-3.5 bg-[#2C71B8] text-white rounded-2xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:bg-blue-300"
+                >
+                  {isLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+
+            </form>
           </div>
         </main>
       </div>
