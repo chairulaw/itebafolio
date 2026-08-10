@@ -396,7 +396,8 @@ useEffect(() => {
                       width={35}
                       label={{
                         value: 'Jumlah Project',
-                        angle: 90,
+                        angle: -90,
+                        
                         position: 'insideLeft',
                         style: { fontSize: 10, fill: '#94a3b8', fontWeight: 600 },
                         dx: 12
