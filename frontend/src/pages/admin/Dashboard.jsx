@@ -297,7 +297,6 @@ useEffect(() => {
             <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style={{ width: '72%' }} />
             </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">72% dari kapasitas</p>
           </div>
 
           {/* Card: Total Project */}
@@ -317,7 +316,6 @@ useEffect(() => {
             <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style={{ width: '58%' }} />
             </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">58% proyek publik</p>
           </div>
 
           {/* Card: Kasus Pelanggaran */}
@@ -360,7 +358,7 @@ useEffect(() => {
                   </div>
                   <h3 className="text-sm font-bold text-gray-800">Tren Upload Project</h3>
                 </div>
-                <p className="text-xs text-gray-400 ml-9">Jumlah project baru yang diunggah, per bulan</p>
+                <p className="text-xs text-gray-400 ml-20">Jumlah project baru yang diunggah, per bulan</p>
               </div>
               <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-blue-300 shrink-0">
                 <Sparkles size={9} /> MONTHLY
