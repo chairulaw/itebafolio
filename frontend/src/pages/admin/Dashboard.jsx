@@ -371,7 +371,7 @@ useEffect(() => {
                 <p className="text-xs text-gray-400">Belum ada data upload untuk ditampilkan.</p>
               </div>
             ) : (
-              <div className="h-64 w-full relative mt-4">
+              <div className="w-full h-[300px] relative mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData} margin={{ top: 24, right: 12, bottom: 0, left: -8 }}>
                     <defs>
@@ -397,7 +397,7 @@ useEffect(() => {
                       label={{
                         value: 'Jumlah Project',
                         angle: -90,
-                        
+
                         position: 'insideLeft',
                         style: { fontSize: 10, fill: '#94a3b8', fontWeight: 600 },
                         dx: 12
@@ -451,7 +451,7 @@ useEffect(() => {
       <p className="text-xs text-gray-400">Belum ada data project untuk ditampilkan.</p>
     </div>
   ) : (
-    <div className="h-64 w-full relative mt-4">
+    <div className="w-full h-[300px] relative mt-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 45, bottom: 0, left: 24 }}>
           <defs>
