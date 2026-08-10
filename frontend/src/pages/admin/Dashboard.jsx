@@ -358,7 +358,7 @@ useEffect(() => {
                   </div>
                   <h3 className="text-sm font-bold text-gray-800">Tren Upload Project</h3>
                 </div>
-                <p className="text-xs text-gray-400 ml-20">Jumlah project baru yang diunggah, per bulan</p>
+                <p className="text-xs text-gray-400 ml-9">Jumlah project baru yang diunggah, per bulan</p>
               </div>
               <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-blue-300 shrink-0">
                 <Sparkles size={9} /> MONTHLY
@@ -396,7 +396,7 @@ useEffect(() => {
                       width={35}
                       label={{
                         value: 'Jumlah Project',
-                        angle: -90,
+                        angle: 90,
                         position: 'insideLeft',
                         style: { fontSize: 10, fill: '#94a3b8', fontWeight: 600 },
                         dx: 12
