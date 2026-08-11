@@ -7,20 +7,28 @@ const AUTO_SLIDE_INTERVAL = 5000;
 export default function HeroSlider({ projects = [] }) {
   // PERBAIKAN: Gunakan useMemo dan pengurutan kebal peluru (berdasarkan ID tertinggi)
   const slides = useMemo(() => {
-    if (!projects || projects.length === 0) return [];
+    if (!projects || !Array.isArray(projects) || projects.length === 0) return [];
     
-    return [...projects]
-      .sort((a, b) => {
-        // 1. Prioritaskan urut berdasarkan ID (Paling akurat untuk data terbaru di MySQL)
-        if (b.id && a.id) {
-          return b.id - a.id; 
-        }
-        // 2. Fallback jika ID tidak ada: Gunakan tanggal
-        const dateB = new Date(b.created_at || b.createdAt).getTime();
-        const dateA = new Date(a.created_at || a.createdAt).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 3); // Kunci hanya 3 teratas
+    // 1. Kita buat salinan datanya
+    const sorted = [...projects].sort((a, b) => {
+      // 2. Ambil waktu (mencakup dua format penamaan database umum)
+      const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+      const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+      
+      // 3. Prioritas Pertama: Waktu terbaru
+      if (timeA !== timeB) {
+        return timeB - timeA;
+      }
+      
+      // 4. Prioritas Kedua (Jika waktu persis sama): ID Terbesar
+      return (b.id || 0) - (a.id || 0);
+    });
+
+    // ALAT PENDETEKSI: Buka Inspect Element -> Console di browser Anda
+    console.log("1. Total Semua Project:", projects.length);
+    console.log("2. 3 Project Terbaru untuk Slider:", sorted.slice(0, 3).map(p => p.judul_project));
+
+    return sorted.slice(0, 3);
   }, [projects]);
 
   const [current, setCurrent] = useState(0);

@@ -114,7 +114,7 @@ export default function Homepage() {
             transition={{ duration: 1, ease: smoothEasing }}
             className="mb-16 md:mb-20"
           >
-            <HeroSlider projects={featuredProjects} />
+            <HeroSlider projects={projects} />
           </motion.div>
         )}
 
