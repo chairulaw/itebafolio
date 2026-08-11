@@ -77,7 +77,7 @@ export default function Homepage() {
       sorted.sort(() => Math.random() - 0.5);
     }
 
-    return sorted.slice(0, 12);
+    return sorted
   }, [projects]);
 
   return (
