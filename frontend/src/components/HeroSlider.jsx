@@ -1,15 +1,27 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Interval otomatis (ms)
 const AUTO_SLIDE_INTERVAL = 5000;
 
 export default function HeroSlider({ projects = [] }) {
-  // PERBAIKAN: Urutkan berdasarkan tanggal terbaru, lalu ambil 3 teratas
-  const slides = [...projects]
-    .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-    .slice(0, 3);
+  // PERBAIKAN: Gunakan useMemo dan pengurutan kebal peluru (berdasarkan ID tertinggi)
+  const slides = useMemo(() => {
+    if (!projects || projects.length === 0) return [];
+    
+    return [...projects]
+      .sort((a, b) => {
+        // 1. Prioritaskan urut berdasarkan ID (Paling akurat untuk data terbaru di MySQL)
+        if (b.id && a.id) {
+          return b.id - a.id; 
+        }
+        // 2. Fallback jika ID tidak ada: Gunakan tanggal
+        const dateB = new Date(b.created_at || b.createdAt).getTime();
+        const dateA = new Date(a.created_at || a.createdAt).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 3); // Kunci hanya 3 teratas
+  }, [projects]);
 
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -26,7 +38,6 @@ export default function HeroSlider({ projects = [] }) {
   const goNext = useCallback(() => goTo(current + 1), [current, goTo]);
   const goPrev = useCallback(() => goTo(current - 1), [current, goTo]);
 
-  // Menyalakan ulang timer auto-slide
   const restartAutoSlide = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (slides.length <= 1 || isHovered) return;
@@ -82,14 +93,12 @@ export default function HeroSlider({ projects = [] }) {
               onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80'; }}
             />
 
-            {/* Gradient */}
             <div
               className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent transition-opacity duration-500 pointer-events-none ${
                 isHovered ? 'opacity-100' : 'opacity-70'
               }`}
             />
 
-            {/* Info karya */}
             <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
               <span className="inline-block mb-3 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-blue-300">
                 Karya Terbaru
