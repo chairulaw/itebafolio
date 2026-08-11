@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft,
-  UploadCloud,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  FileText,
-  Film,
-  Music,
-  X,
-  AlertCircle,
-  Camera,
-  Save,
-  Send,
-  Trash2,
-  AlertTriangle 
+  ArrowLeft, UploadCloud, Link as LinkIcon, Image as ImageIcon,
+  FileText, Film, Music, X, AlertCircle, Camera, Save, Send,
+  Trash2, AlertTriangle, CloudUpload
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
@@ -38,7 +27,11 @@ export default function ManageProject() {
   const [additionalMediaFiles, setAdditionalMediaFiles] = useState([]);
 
   const [categories, setCategories] = useState([]);
+  
+  // --- STATE BARU UNTUK PROGRESS UPLOAD ---
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); 
+  
   const [isFetching, setIsFetching] = useState(isEditMode);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -211,6 +204,7 @@ export default function ManageProject() {
     }
 
     setIsLoading(true);
+    setUploadProgress(0); // Reset progress ke 0 di awal
 
     try {
       const submitData = new FormData();
@@ -229,23 +223,25 @@ export default function ManageProject() {
 
       const existingHighlights = mainMediaFiles.filter(m => m.isExisting).map(m => m.name);
       submitData.append('existing_highlight', JSON.stringify(existingHighlights));
-
-      mainMediaFiles.forEach(media => {
-        if (media.file) submitData.append('highlight', media.file);
-      });
+      mainMediaFiles.forEach(media => { if (media.file) submitData.append('highlight', media.file); });
 
       const existingAdditional = additionalMediaFiles.filter(m => m.isExisting).map(m => m.name);
       submitData.append('existing_additional', JSON.stringify(existingAdditional));
+      additionalMediaFiles.forEach(media => { if (media.file) submitData.append('additional_media', media.file); });
 
-      additionalMediaFiles.forEach(media => {
-        if (media.file) submitData.append('additional_media', media.file);
-      });
+      // --- KONFIGURASI AXIOS PROGRESS ---
+      const axiosConfig = {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      };
 
       if (isEditMode) {
-        await api.put(`/projects/${projectId}`, submitData);
+        await api.put(`/projects/${projectId}`, submitData, axiosConfig);
         toast.success("Perubahan pada karya berhasil disimpan!");
       } else {
-        const res = await api.post(`/projects`, submitData);
+        const res = await api.post(`/projects`, submitData, axiosConfig);
         if (res.data.warning) {
           toast.success(`Berhasil diunggah! Note: ${res.data.warning}`);
         } else {
@@ -256,7 +252,6 @@ export default function ManageProject() {
       navigate('/profile');
     } catch (error) {
       toast.error(`Gagal ${isEditMode ? 'memperbarui' : 'mempublikasikan'} karya: ` + (error.response?.data?.message || error.message));
-    } finally {
       setIsLoading(false);
     }
   };
@@ -283,8 +278,7 @@ export default function ManageProject() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] flex flex-col pb-20">
-      {/* Container diperlebar ke max-w-6xl */}
+    <div className="min-h-screen bg-[#FBFBFB] flex flex-col pb-20 relative">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -298,13 +292,12 @@ export default function ManageProject() {
         </div>
       </div>
 
-      {/* Main Container diperlebar ke max-w-6xl */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-6 pt-8 md:pt-10">
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-10">
           
           <form className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* KOLOM KIRI: Informasi Dasar (7 dari 12 bagian) */}
+            {/* KOLOM KIRI */}
             <div className="lg:col-span-7 space-y-8">
               <section className="space-y-6">
                 <div className="border-b border-gray-50 pb-3">
@@ -315,25 +308,13 @@ export default function ManageProject() {
                 <div className="space-y-5">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-2">Judul Portofolio *</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      placeholder="Cth: Redesign Aplikasi Layanan Kampus"
-                      className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium"
-                    />
+                    <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Cth: Redesign Aplikasi Layanan Kampus" className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium" />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-2">Kategori Portofolio *</label>
-                      <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium text-gray-700 appearance-none"
-                      >
+                      <select name="category" value={formData.category} onChange={handleChange} className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium text-gray-700 appearance-none">
                         <option value="" disabled>Pilih Kategori...</option>
                         {categories.map(cat => (
                           <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
@@ -347,14 +328,7 @@ export default function ManageProject() {
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                           <LinkIcon size={16} />
                         </div>
-                        <input
-                          type="url"
-                          name="prototypeLink"
-                          value={formData.prototypeLink}
-                          onChange={handleChange}
-                          placeholder="https://figma.com/..."
-                          className="w-full pl-11 pr-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium"
-                        />
+                        <input type="url" name="prototypeLink" value={formData.prototypeLink} onChange={handleChange} placeholder="https://figma.com/..." className="w-full pl-11 pr-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium" />
                       </div>
                     </div>
                   </div>
@@ -366,33 +340,23 @@ export default function ManageProject() {
                         {wordCount} / {maxWords} kata
                       </span>
                     </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      placeholder="Ceritakan tentang tantangan, proses pembuatan, dan hasil akhir dari Portofolio ini..."
-                      className="w-full p-5 bg-gray-50 border border-gray-200 rounded-2xl h-[360px] text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium resize-none leading-relaxed"
-                    ></textarea>
+                    <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Ceritakan tentang tantangan, proses pembuatan, dan hasil akhir dari Portofolio ini..." className="w-full p-5 bg-gray-50 border border-gray-200 rounded-2xl h-[360px] text-sm focus:outline-none focus:ring-2 focus:ring-[#2C71B8]/20 focus:border-[#2C71B8] transition-all font-medium resize-none leading-relaxed"></textarea>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* KOLOM KANAN: Upload Media (5 dari 12 bagian) */}
+            {/* KOLOM KANAN */}
             <div className="lg:col-span-5 space-y-8">
-              
-              {/* --- THUMBNAIL COVER --- */}
               <section className="space-y-4">
                 <div className="border-b border-gray-50 pb-2">
                   <h2 className="text-base font-black text-gray-900 tracking-tight flex items-center gap-2">
                     Thumbnail Cover <span className="text-red-500">*</span>
                   </h2>
                 </div>
-
                 <div className="flex flex-col gap-4">
                   <label className="group relative w-full h-48 rounded-3xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-blue-50/50 hover:border-[#2C71B8] flex flex-col items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden">
                     <input type="file" accept="image/png, image/jpeg, image/jpg, image/webp" className="hidden" onChange={handleThumbnailChange} />
-
                     {thumbnailFile ? (
                       <>
                         <img src={thumbnailFile.preview} alt="Thumbnail Preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -409,17 +373,11 @@ export default function ManageProject() {
                       </>
                     )}
                   </label>
-
                   {thumbnailFile && (
                     <div className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-start justify-between">
                       <div className="min-w-0 pr-4">
                         <p className="text-sm font-bold text-gray-800 truncate">{thumbnailFile.name}</p>
                         <p className="text-xs text-gray-400 mt-1">Ukuran: {thumbnailFile.size}</p>
-                        {thumbnailFile.isExisting ? (
-                          <p className="text-[11px] text-blue-600 font-medium mt-1">✓ Memakai gambar lama</p>
-                        ) : (
-                          <p className="text-[11px] text-green-600 font-medium mt-1">✓ Thumbnail siap</p>
-                        )}
                       </div>
                       <button onClick={removeThumbnail} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-xl transition shadow-sm shrink-0">
                         <X size={16} />
@@ -429,14 +387,12 @@ export default function ManageProject() {
                 </div>
               </section>
 
-              {/* --- HIGHLIGHT MEDIA --- */}
               <section className="space-y-4">
                 <div className="border-b border-gray-50 pb-2">
                   <h2 className="text-base font-black text-gray-900 tracking-tight flex items-center gap-2">
                     Highlight Media <span className="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full ml-1">Utama</span>
                   </h2>
                 </div>
-
                 <label className="group relative w-full h-24 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-blue-50/50 hover:border-[#2C71B8] flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden">
                   <input type="file" multiple accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf, video/mp4, audio/mpeg" className="hidden" onChange={handleMainMediaChange} />
                   <div className="flex items-center gap-3">
@@ -449,7 +405,6 @@ export default function ManageProject() {
                     </div>
                   </div>
                 </label>
-
                 {mainMediaFiles.length > 0 && (
                   <div className="space-y-2.5 mt-2">
                     {mainMediaFiles.map((file, idx) => (
@@ -470,14 +425,12 @@ export default function ManageProject() {
                 )}
               </section>
 
-              {/* --- ADDITIONAL MEDIA --- */}
               <section className="space-y-4">
                 <div className="border-b border-gray-50 pb-2">
                   <h2 className="text-base font-black text-gray-900 tracking-tight flex items-center gap-2">
                     Media Tambahan <span className="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full ml-1">Opsional</span>
                   </h2>
                 </div>
-
                 <label className="group relative w-full h-24 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-emerald-50/50 hover:border-emerald-500 flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden">
                   <input type="file" multiple className="hidden" onChange={handleAdditionalMediaChange} />
                   <div className="flex items-center gap-3">
@@ -490,7 +443,6 @@ export default function ManageProject() {
                     </div>
                   </div>
                 </label>
-
                 {additionalMediaFiles.length > 0 && (
                   <div className="space-y-2.5 mt-2">
                     {additionalMediaFiles.map((file, idx) => (
@@ -510,10 +462,9 @@ export default function ManageProject() {
                   </div>
                 )}
               </section>
-
             </div>
 
-            {/* BAWAH: Alert & Tombol Aksi (Spans Full Width 12 columns) */}
+            {/* BAWAH: Alert & Tombol Aksi */}
             <div className="lg:col-span-12 space-y-6 pt-4 border-t border-gray-100">
               <div className="flex items-start gap-3 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-blue-800">
                 <AlertCircle size={20} className="shrink-0 mt-0.5" />
@@ -524,32 +475,16 @@ export default function ManageProject() {
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 {isEditMode ? (
-                  <button
-                    type="button"
-                    onClick={triggerDelete}
-                    disabled={isLoading}
-                    className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-6 py-3.5 text-sm font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors border border-transparent"
-                  >
-                    <Trash2 size={18} />
-                    Hapus Project
+                  <button type="button" onClick={triggerDelete} disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-6 py-3.5 text-sm font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors border border-transparent">
+                    <Trash2 size={18} /> Hapus Project
                   </button>
-                ) : (
-                  <div></div>
-                )}
+                ) : ( <div></div> )}
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                  <button
-                    onClick={() => navigate(isEditMode ? '/profile' : '/')}
-                    type="button"
-                    className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-8 py-3.5 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full transition-colors border border-transparent hover:border-gray-200"
-                  >
+                  <button onClick={() => navigate(isEditMode ? '/profile' : '/')} type="button" disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-8 py-3.5 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full transition-colors border border-transparent hover:border-gray-200 disabled:opacity-50">
                     Batal
                   </button>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isLoading}
-                    className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-10 py-3.5 bg-[#2C71B8] text-white text-sm font-bold rounded-full shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-blue-400"
-                  >
+                  <button onClick={handleSubmit} disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center cursor-pointer gap-2 px-10 py-3.5 bg-[#2C71B8] text-white text-sm font-bold rounded-full shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-blue-400">
                     {isEditMode ? <Save size={18} /> : <Send size={18} />}
                     {isLoading ? 'Memproses...' : (isEditMode ? 'Simpan Perubahan' : 'Publikasikan Portofolio')}
                   </button>
@@ -561,9 +496,46 @@ export default function ManageProject() {
         </div>
       </main>
 
+      {/* ========================================================= */}
+      {/* OVERLAY PROGRESS BAR SAAT PROSES UPLOAD FILE              */}
+      {/* ========================================================= */}
+      {isLoading && uploadProgress > 0 && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center">
+            <div className="w-16 h-16 bg-blue-50 text-[#2C71B8] rounded-full flex items-center justify-center mb-5 shadow-sm">
+              <CloudUpload size={32} className={uploadProgress < 100 ? "animate-bounce" : ""} />
+            </div>
+            
+            <h3 className="text-xl font-black text-gray-900 mb-2 tracking-tight">
+              {uploadProgress === 100 ? "Menyimpan Data..." : "Mengunggah Karya..."}
+            </h3>
+            
+            <p className="text-sm text-gray-500 mb-7 leading-relaxed">
+              {uploadProgress === 100 
+                ? "File berhasil diunggah. Sedang memproses data ke server..."
+                : "Mohon tunggu sejenak, proses ini memakan waktu jika ukuran file Anda besar."}
+            </p>
+            
+            {/* Indikator Bar */}
+            <div className="w-full bg-gray-100 rounded-full h-3.5 mb-3 overflow-hidden shadow-inner">
+              <div 
+                className="bg-[#2C71B8] h-full rounded-full transition-all duration-300 ease-out relative overflow-hidden" 
+                style={{ width: `${uploadProgress}%` }}
+              >
+                {/* Efek shimmer di dalam progress bar */}
+                <div className="absolute top-0 bottom-0 left-0 right-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]"></div>
+              </div>
+            </div>
+            
+            <p className="text-[15px] font-black text-[#2C71B8]">{uploadProgress}%</p>
+          </div>
+        </div>
+      )}
+
+      {/* OVERLAY HAPUS KARYA */}
       {deleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-6 md:p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-gray-100">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 md:p-8 shadow-2xl border border-gray-100">
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-5 shadow-sm">
                 <AlertTriangle size={32} strokeWidth={2.5} />
@@ -584,6 +556,12 @@ export default function ManageProject() {
           </div>
         </div>
       )}
+      
+      <style>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
