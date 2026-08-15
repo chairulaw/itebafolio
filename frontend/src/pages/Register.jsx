@@ -33,7 +33,7 @@ export default function Register() {
   ), []);
 
   // --- HANDLER FUNGSI REGISTRASI & AUTO LOGIN ---
-  const handleRegister = async (e) => {
+const handleRegister = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -43,7 +43,7 @@ export default function Register() {
     setIsLoading(true);
     try {
       // Payload dinamis: Jika pengunjung, nim/prodi/angkatan dikirim kosong agar ditangani backend
-const payload = {
+      const payload = {
         nama_user: namaUser,
         email: email,
         password: password,
@@ -56,20 +56,10 @@ const payload = {
       // 1. Eksekusi API Registrasi
       await api.post('/auth/register', payload);
 
-      // 2. Langsung eksekusi API Login otomatis dengan email & password yang sama
-      const loginResponse = await api.post('/auth/login', {
-        email: email,
-        password: password,
-      });
-
-      // 3. Simpan Token dan Data User dari respons login ke LocalStorage
-      localStorage.setItem('token', loginResponse.data.token);
-      localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
-
-      toast.success("Pendaftaran berhasil! Selamat datang di ITEBAFolio.");
+      toast.success("Pendaftaran berhasil! Silakan masuk menggunakan akun Anda.");
       
-      // 4. Arahkan ke halaman utama dengan state sudah login
-      navigate('/');
+      // 2. Arahkan langsung ke halaman login
+      navigate('/login');
 
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");
