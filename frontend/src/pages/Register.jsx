@@ -33,32 +33,43 @@ export default function Register() {
   ), []);
 
   // --- HANDLER FUNGSI REGISTRASI & AUTO LOGIN ---
-const handleRegister = async (e) => {
+// --- HANDLER FUNGSI REGISTRASI ---
+  const handleRegister = async (e) => {
     e.preventDefault();
 
+    // 1. Validasi Password
     if (password !== confirmPassword) {
       return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
+    // 2. Validasi Email Pengunjung (TIDAK BOLEH pakai @iteba.ac.id)
+    if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@iteba.ac.id')) {
+      return toast.error("Pengunjung umum tidak dapat menggunakan email kampus (@iteba.ac.id).");
+    }
+
+    // (Opsional) Validasi Email Mahasiswa (WAJIB pakai @iteba.ac.id)
+    if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@iteba.ac.id')) {
+      return toast.error("Mahasiswa ITEBA wajib menggunakan email kampus (@iteba.ac.id).");
+    }
+
     setIsLoading(true);
     try {
-      // Payload dinamis: Jika pengunjung, nim/prodi/angkatan dikirim kosong agar ditangani backend
+      // Payload dinamis
       const payload = {
         nama_user: namaUser,
         email: email,
         password: password,
         nim: registerType === 'mahasiswa' ? nim : null,
         prodi: registerType === 'mahasiswa' ? prodi : null,
-        // Paksa menjadi angka (Number) untuk mahasiswa, dan null untuk pengunjung
         angkatan: registerType === 'mahasiswa' ? Number(angkatan) : null 
       };
 
-      // 1. Eksekusi API Registrasi
+      // Eksekusi API Registrasi
       await api.post('/auth/register', payload);
 
       toast.success("Pendaftaran berhasil! Silakan masuk menggunakan akun Anda.");
       
-      // 2. Arahkan langsung ke halaman login
+      // Arahkan ke halaman login
       navigate('/login');
 
     } catch (error) {
