@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom'; // <-- 1. TAMBAHKAN IMPORT INI DI SINI
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { PortfolioProvider } from './context/PortfolioContext';
 
@@ -7,7 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsSidebar from './components/SettingsSidebar';
 import GlobalBackground from './components/GlobalBackground';
-import {Toaster} from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 // PAGES
 import Homepage from './pages/Homepage';
@@ -19,7 +20,7 @@ import EditProfile from './pages/EditProfile';
 import EditAccount from './pages/EditAccount';
 import Profile from './pages/Profile';
 import FilterPage from './pages/FilterPage';
-import Search from './pages/Search'
+import Search from './pages/Search';
 import PublicProfile from './pages/PublicProfile';
 
 // ADMIN PAGES
@@ -116,24 +117,30 @@ function App() {
   return (
     <PortfolioProvider>
       <BrowserRouter>
-      <Toaster 
-        position="top-right" 
-        reverseOrder={false} 
-        containerStyle={{
-          zIndex: 9999999,
-        }}
-        toastOptions={{
-          duration: 3000,
-          style: {
-            borderRadius: '10px',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            background: 'rgba(44, 113, 184, 0.95)', // Blue tint
-            backdropFilter: 'blur(12px)',
-            color: '#ffffff',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-          },
-        }}
-      />
+        
+        {/* 2. BUNGKUS TOASTER DENGAN createPortal KE document.body */}
+        {createPortal(
+          <Toaster 
+            position="top-right" 
+            reverseOrder={false} 
+            containerStyle={{
+              zIndex: 9999999, // Z-index tertinggi
+            }}
+            toastOptions={{
+              duration: 3000,
+              style: {
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(44, 113, 184, 0.95)', // Blue tint
+                backdropFilter: 'blur(12px)',
+                color: '#ffffff',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+              },
+            }}
+          />,
+          document.body // <-- INI KUNCI AGAR TOAST TIDAK TERTUTUP MODAL
+        )}
+
         <AppContent />
       </BrowserRouter>
     </PortfolioProvider>
