@@ -119,6 +119,9 @@ function App() {
       <Toaster 
         position="top-right" 
         reverseOrder={false} 
+        containerStyle={{
+          zIndex: 9999999,
+        }}
         toastOptions={{
           duration: 3000,
           style: {
