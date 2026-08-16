@@ -256,7 +256,7 @@ export default function ManageUsers() {
       {/* KODE PORTAL: MEMAKSA MODAL KELUAR DARI JEBAKAN CSS      */}
       {/* ======================================================= */}
       {isEditModalOpen && selectedUser && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 md:p-6">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 md:p-6">
           
           <div className="flex flex-col max-h-[90vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
             
