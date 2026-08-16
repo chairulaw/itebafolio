@@ -47,7 +47,7 @@ export default function ManageUsers() {
     fetchUsers();
   }, []);
 
-// 2. FUNGSI HAPUS PENGGUNA (DENGAN TOAST INTERAKTIF)
+  // 2. FUNGSI HAPUS PENGGUNA (DENGAN TOAST INTERAKTIF)
   const handleDeleteUser = (id, nama) => {
     toast((t) => (
       <div className="flex flex-col gap-3 min-w-[220px]">
@@ -257,13 +257,14 @@ export default function ManageUsers() {
         </div>
       </div>
 
-     {isEditModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
+      {isEditModalOpen && selectedUser && (
+        // PERBAIKAN: Gunakan fixed top-0 left-0 w-screen h-screen dengan z-index tinggi
+        <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-md overflow-hidden p-4 md:p-6">
           
-          {/* PERBAIKAN 1: Tambahkan flex, flex-col, dan max-h-[90vh] pada kotak utama */}
-          <div className="flex flex-col max-h-[90vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
+          {/* Kotak Utama Modal dengan batasan max-h-[85vh] */}
+          <div className="flex flex-col max-h-[85vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
             
-            {/* PERBAIKAN 2: Tambahkan shrink-0 agar header tidak ikut menyusut saat di-scroll */}
+            {/* Header Modal (Statis) */}
             <div className="shrink-0 flex items-center justify-between px-7 py-6 border-b border-gray-100/80 bg-white/40">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#2C71B8] mb-1">Enterprise Panel</p>
@@ -277,7 +278,7 @@ export default function ManageUsers() {
               </button>
             </div>
 
-            {/* PERBAIKAN 3: Hapus max-h-[75vh], cukup gunakan overflow-y-auto */}
+            {/* Isi Form (Scrollable) */}
             <form onSubmit={handleSaveChanges} className="overflow-y-auto p-7 space-y-6">
               
               {/* --- SECTION 1: ROLE --- */}
@@ -423,7 +424,7 @@ export default function ManageUsers() {
                 </div>
               </div>
 
-              {/* PERBAIKAN 4: Tambahkan shrink-0 pada pembungkus tombol agar tidak tertekan */}
+              {/* Footer Tombol (Statis) */}
               <div className="shrink-0 flex items-center justify-end gap-3 pt-4 mt-2 border-t border-gray-100/80">
                 <button
                   type="button"
