@@ -56,52 +56,111 @@ export default function ViolationLog() {
     fetchViolations();
   }, []);
 
-  // --- HANDLER AKSI DI TABEL UTAMA ---
-  const handleAction = async (id, actionType) => {
+  // --- HANDLER AKSI DI TABEL UTAMA DENGAN TOAST INTERAKTIF ---
+  const handleAction = (id, actionType) => {
     const isDelete = actionType === 'delete';
+    const newStatus = isDelete ? 'resolved' : 'dismissed';
     const confirmMsg = isDelete 
-      ? 'Hapus konten ini secara permanen dari sistem?' 
+      ? 'Yakin ingin menghapus konten ini permanen?' 
       : 'Abaikan laporan ini? Konten dianggap aman.';
 
-    if (window.confirm(confirmMsg)) {
-      try {
-        const newStatus = isDelete ? 'resolved' : 'dismissed';
-        await api.put(`/admin/violations/${id}`, { status: newStatus });
-        setViolations(violations.map(v => v.id === id ? { ...v, status: newStatus } : v));
-        
-        // PESAN TOAST SUKSES DITAMBAHKAN
-        toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
-      } catch (error) {
-        toast.error("Gagal memproses tindakan.");
-        console.error(error);
-      }
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[220px]">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-500 font-bold">⚠️</span>
+          <p className="font-semibold text-white text-sm">{confirmMsg}</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id); // Tutup toast konfirmasi
+              
+              // Lakukan proses API setelah dikonfirmasi
+              try {
+                await api.put(`/admin/violations/${id}`, { status: newStatus });
+                setViolations(prev => prev.map(v => v.id === id ? { ...v, status: newStatus } : v));
+                
+                toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
+              } catch (error) {
+                toast.error("Gagal memproses tindakan.");
+                console.error(error);
+              }
+            }}
+            className={`px-4 py-2 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-sm ${
+              isDelete 
+                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' 
+                : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
+            }`}
+          >
+            {isDelete ? 'Ya, Hapus' : 'Ya, Abaikan'}
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Toast bertahan sampai diklik
+      position: 'top-center',
+    });
   };
 
-  // --- HANDLER AKSI DARI DALAM MODAL ---
-  const handleModalAction = async (actionType) => {
+  // --- HANDLER AKSI DARI DALAM MODAL DENGAN TOAST INTERAKTIF ---
+  const handleModalAction = (actionType) => {
     if (!selectedViolation) return;
     
     const isDelete = actionType === 'delete';
+    const newStatus = isDelete ? 'resolved' : 'dismissed';
     const confirmMsg = isDelete 
-      ? `Tindakan ini akan menghapus ${selectedViolation.type} tersebut secara permanen. Lanjutkan?` 
-      : 'Tandai laporan ini sebagai aman dan abaikan?';
+      ? `Hapus ${selectedViolation.type} tersebut secara permanen?` 
+      : 'Tandai laporan ini sebagai aman?';
 
-    if (window.confirm(confirmMsg)) {
-      try {
-        const newStatus = isDelete ? 'resolved' : 'dismissed';
-        await api.put(`/admin/violations/${selectedViolation.id}`, { status: newStatus });
-        
-        setViolations(violations.map(v => v.id === selectedViolation.id ? { ...v, status: newStatus } : v));
-        setSelectedViolation(null);
-        
-        // PESAN TOAST SUKSES DITAMBAHKAN
-        toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
-      } catch (error) {
-        toast.error("Gagal memproses tindakan.");
-        console.error(error);
-      }
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[220px]">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-500 font-bold">⚠️</span>
+          <p className="font-semibold text-white text-sm">{confirmMsg}</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id); // Tutup toast konfirmasi
+              
+              // Lakukan proses API setelah dikonfirmasi
+              try {
+                await api.put(`/admin/violations/${selectedViolation.id}`, { status: newStatus });
+                setViolations(prev => prev.map(v => v.id === selectedViolation.id ? { ...v, status: newStatus } : v));
+                setSelectedViolation(null); // Tutup Modal Utama
+                
+                toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
+              } catch (error) {
+                toast.error("Gagal memproses tindakan.");
+                console.error(error);
+              }
+            }}
+            className={`px-4 py-2 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-sm ${
+              isDelete 
+                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' 
+                : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
+            }`}
+          >
+            {isDelete ? 'Ya, Hapus' : 'Ya, Abaikan'}
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, 
+      position: 'top-center',
+    });
   };
 
   const getStatusBadge = (status) => {
@@ -239,7 +298,6 @@ export default function ViolationLog() {
                             title="Tinjau Konten" 
                             className="p-2 text-gray-400 hover:text-[#2C71B8] hover:bg-blue-50 rounded-xl transition-colors"
                           >
-                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
                             <Eye size={22} strokeWidth={2.5} />
                           </button>
                           
@@ -248,7 +306,6 @@ export default function ViolationLog() {
                             title="Abaikan Laporan" 
                             className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
                           >
-                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
                             <CheckCircle size={22} strokeWidth={2.5} />
                           </button>
                           
@@ -257,13 +314,11 @@ export default function ViolationLog() {
                             title="Hapus Konten" 
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                           >
-                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
                             <Trash2 size={22} strokeWidth={2.5} />
                           </button>
                         </div>
                       ) : (
                         <button className="p-2 text-gray-300 hover:text-gray-600 rounded-xl transition-colors">
-                          {/* UKURAN IKON DIPERBESAR MENJADI 24 */}
                           <MoreVertical size={24} strokeWidth={2.5} />
                         </button>
                       )}
