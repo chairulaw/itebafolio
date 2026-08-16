@@ -47,18 +47,48 @@ export default function ManageUsers() {
     fetchUsers();
   }, []);
 
-  // 2. FUNGSI HAPUS PENGGUNA
-  const handleDeleteUser = async (id, nama) => {
-    if (window.confirm(`Yakin ingin menghapus permanen pengguna ${nama}? Semua karya miliknya juga akan hilang!`)) {
-      const toastId = toast.loading("Menghapus pengguna...");
-      try {
-        await api.delete(`/admin/users/${id}`);
-        setUsers(users.filter(u => u.id !== id));
-        toast.success(`Pengguna ${nama} berhasil dihapus.`, { id: toastId });
-      } catch (error) {
-        toast.error("Gagal menghapus pengguna.", { id: toastId });
-      }
-    }
+// 2. FUNGSI HAPUS PENGGUNA (DENGAN TOAST INTERAKTIF)
+  const handleDeleteUser = (id, nama) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[220px]">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-500 font-bold">⚠️</span>
+          <div className="flex flex-col">
+            <p className="font-semibold text-white text-sm">Hapus permanen {nama}?</p>
+            <p className="text-xs text-white/70">Semua karya miliknya juga akan hilang!</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id); // Tutup toast konfirmasi
+              
+              // Tampilkan toast loading saat proses hapus berjalan
+              const toastId = toast.loading("Menghapus pengguna...");
+              try {
+                await api.delete(`/admin/users/${id}`);
+                setUsers(users.filter(u => u.id !== id));
+                toast.success(`Pengguna ${nama} berhasil dihapus.`, { id: toastId });
+              } catch (error) {
+                toast.error("Gagal menghapus pengguna.", { id: toastId });
+              }
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors cursor-pointer"
+          >
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Toast bertahan sampai diklik
+      position: 'top-center',
+    });
   };
 
   // 3. FUNGSI BUKA MODAL EDIT (Memuat Data User)
@@ -103,8 +133,8 @@ export default function ManageUsers() {
 
       await api.put(`/admin/users/${selectedUser.id}`, payload);
 
-      fetchUsers();
-      setIsEditModalOpen(false);
+      fetchUsers(); // Refresh data tabel
+      setIsEditModalOpen(false); // Tutup modal
       toast.success("Data pengguna berhasil diperbarui!", { id: toastId });
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan server.", { id: toastId });

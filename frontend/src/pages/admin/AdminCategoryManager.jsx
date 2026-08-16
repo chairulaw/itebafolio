@@ -38,7 +38,7 @@ export default function AdminCategoryManager() {
     fetchCategories();
   }, []);
 
-  // 2. Handle Perubahan File Gambar Banner
+ // 2. Handle Perubahan File Gambar Banner
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -50,9 +50,19 @@ export default function AdminCategoryManager() {
   // 3. Handle Submit (Tambah atau Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!namaKategori.trim()) return alert("Nama kategori/filter wajib diisi!");
+    
+    // Validasi input dengan toast.error
+    if (!namaKategori.trim()) {
+      return toast.error("Nama kategori/filter wajib diisi!");
+    }
 
     setIsLoading(true);
+    
+    // Notifikasi loading saat proses berjalan
+    const toastId = toast.loading(
+      editingId ? "Memperbarui kategori..." : "Menyimpan kategori baru..."
+    );
+
     const formData = new FormData();
     formData.append('nama_kategori', namaKategori);
     formData.append('deskripsi', deskripsi);
@@ -64,16 +74,17 @@ export default function AdminCategoryManager() {
       if (editingId) {
         // Mode Update
         await api.put(`/categories/${editingId}`, formData);
-        toast.success("Filter/Kategori berhasil diperbarui!");
+        toast.success("Filter/Kategori berhasil diperbarui!", { id: toastId });
       } else {
         // Mode Tambah Baru
         await api.post('/categories', formData);
-        toast.success("Filter/Kategori baru berhasil ditambahkan!");
+        toast.success("Filter/Kategori baru berhasil ditambahkan!", { id: toastId });
       }
       resetForm();
       fetchCategories();
     } catch (error) {
-      alert("Aksi gagal: " + (error.response?.data?.message || error.message));
+      // Tangkap error dengan toast.error
+      toast.error("Aksi gagal: " + (error.response?.data?.message || error.message), { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -92,17 +103,17 @@ export default function AdminCategoryManager() {
     setBannerFile(null);
   };
 
-// 5. Handle Hapus Kategori dengan Custom Toast Interaktif
+  // 5. Handle Hapus Kategori dengan Custom Toast Interaktif
   const handleDelete = (id, name) => {
     toast((t) => (
       <div className="flex flex-col gap-3 min-w-[240px]">
         <div className="flex items-start gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
-            🗑️
+            <span className="text-lg">⚠️</span>
           </div>
           <div>
             <p className="font-bold text-white text-sm">Hapus kategori "{name}"?</p>
-            <p className="text-[11.5px] text-white mt-0.5 leading-snug">Proyek terkait mungkin akan kehilangan relasinya.</p>
+            <p className="text-[11.5px] text-white/70 mt-0.5 leading-snug">Proyek terkait mungkin akan kehilangan relasinya.</p>
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 mt-1">
@@ -114,7 +125,9 @@ export default function AdminCategoryManager() {
           </button>
           <button
             onClick={async () => {
-              toast.dismiss(t.id);
+              toast.dismiss(t.id); // Tutup konfirmasi
+              
+              // Tampilkan toast loading saat menghapus
               const loadingToastId = toast.loading("Menghapus kategori...");
               try {
                 await api.delete(`/categories/${id}`);

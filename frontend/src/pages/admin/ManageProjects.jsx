@@ -64,18 +64,48 @@ export default function ManageProjects() {
     fetchData();
   }, []);
 
-  // --- HANDLER HAPUS PROJECT ---
-  const handleDelete = async (id, title) => {
-    if (window.confirm(`PERINGATAN: Apakah Anda yakin ingin menghapus project "${title}" secara permanen dari database? Tindakan ini tidak dapat dibatalkan.`)) {
-      try {
-        await api.delete(`/admin/projects/${id}`);
-        setProjects(projects.filter(p => p.id !== id));
-        toast.success("Project berhasil dihapus dari sistem.");
-      } catch (error) {
-        toast.error("Gagal menghapus project.");
-        console.error(error);
-      }
-    }
+const handleDelete = (id, title) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[220px]">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-500 font-bold">⚠️</span>
+          <div className="flex flex-col">
+            <p className="font-semibold text-white text-sm">Hapus project "{title}"?</p>
+            <p className="text-xs text-white/70">Tindakan ini tidak dapat dibatalkan.</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id); // Menutup toast konfirmasi
+              
+              // Menampilkan toast loading
+              const toastId = toast.loading("Menghapus project...");
+              try {
+                await api.delete(`/admin/projects/${id}`);
+                setProjects(projects.filter(p => p.id !== id));
+                toast.success("Project berhasil dihapus dari sistem.", { id: toastId });
+              } catch (error) {
+                toast.error("Gagal menghapus project.", { id: toastId });
+                console.error(error);
+              }
+            }}
+            className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 shadow-sm shadow-red-500/30 transition-colors cursor-pointer"
+          >
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Tetap tampil sampai pengguna memilih opsi
+      position: 'top-center',
+    });
   };
 
   // --- FILTER SEARCH ---
