@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom'; // <-- IMPORT PORTAL DI SINI
 import { Search, UserX, Edit2, X, Users as UsersIcon, Shield, Key, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
@@ -26,7 +27,7 @@ export default function ManageUsers() {
         nama_user: u.nama_user || 'Anonim',
         email: u.email || '',
         nim: u.nim || '',
-        prodi: u.prodi || 'Sistem Informasi', // Default fallback
+        prodi: u.prodi || 'Sistem Informasi',
         angkatan: u.angkatan || '',
         bio: u.bio || '',
         website: u.website || '',
@@ -47,7 +48,7 @@ export default function ManageUsers() {
     fetchUsers();
   }, []);
 
-  // 2. FUNGSI HAPUS PENGGUNA (DENGAN TOAST INTERAKTIF)
+  // 2. FUNGSI HAPUS PENGGUNA
   const handleDeleteUser = (id, nama) => {
     toast((t) => (
       <div className="flex flex-col gap-3 min-w-[220px]">
@@ -67,9 +68,7 @@ export default function ManageUsers() {
           </button>
           <button
             onClick={async () => {
-              toast.dismiss(t.id); // Tutup toast konfirmasi
-              
-              // Tampilkan toast loading saat proses hapus berjalan
+              toast.dismiss(t.id); 
               const toastId = toast.loading("Menghapus pengguna...");
               try {
                 await api.delete(`/admin/users/${id}`);
@@ -86,14 +85,13 @@ export default function ManageUsers() {
         </div>
       </div>
     ), {
-      duration: Infinity, // Toast bertahan sampai diklik
+      duration: Infinity, 
       position: 'top-center',
     });
   };
 
-  // 3. FUNGSI BUKA MODAL EDIT (Memuat Data User)
+  // 3. FUNGSI BUKA MODAL EDIT
   const handleEditClick = (user) => {
-    // Duplikat data ke state dan tambahkan field password kosong
     setSelectedUser({ ...user, password: '' }); 
     setIsEditModalOpen(true);
   };
@@ -102,7 +100,6 @@ export default function ManageUsers() {
   const handleSaveChanges = async (e) => {
     e.preventDefault();
 
-    // Validasi Frontend: Cek Email ITEBA
     const isCivitas = selectedUser.role === 'Admin' || selectedUser.role === 'Mahasiswa';
     if (isCivitas && !selectedUser.email.endsWith('@iteba.ac.id')) {
       return toast.error("Admin dan Mahasiswa wajib menggunakan email dengan domain @iteba.ac.id!");
@@ -110,7 +107,7 @@ export default function ManageUsers() {
 
     const toastId = toast.loading("Menyimpan perubahan...");
     try {
-      let newRoleId = 2; // Default Mahasiswa
+      let newRoleId = 2; 
       if (selectedUser.role === 'Admin') newRoleId = 1;
       if (selectedUser.role === 'Pengunjung') newRoleId = 3;
 
@@ -126,22 +123,20 @@ export default function ManageUsers() {
         role_id: newRoleId
       };
 
-      // Hanya kirim password jika admin mengisi field password
       if (selectedUser.password && selectedUser.password.trim() !== "") {
         payload.password = selectedUser.password;
       }
 
       await api.put(`/admin/users/${selectedUser.id}`, payload);
 
-      fetchUsers(); // Refresh data tabel
-      setIsEditModalOpen(false); // Tutup modal
+      fetchUsers(); 
+      setIsEditModalOpen(false); 
       toast.success("Data pengguna berhasil diperbarui!", { id: toastId });
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan server.", { id: toastId });
     }
   };
 
-  // 5. FITUR SEARCH REAL-TIME
   const filteredUsers = users.filter(user =>
     String(user.nama_user).toLowerCase().includes(searchTerm.toLowerCase()) ||
     String(user.nim).toLowerCase().includes(searchTerm.toLowerCase())
@@ -257,12 +252,13 @@ export default function ManageUsers() {
         </div>
       </div>
 
-      {isEditModalOpen && selectedUser && (
-        // PERBAIKAN: Gunakan fixed top-0 left-0 w-screen h-screen dengan z-index tinggi
-        <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-md overflow-hidden p-4 md:p-6">
+      {/* ======================================================= */}
+      {/* KODE PORTAL: MEMAKSA MODAL KELUAR DARI JEBAKAN CSS      */}
+      {/* ======================================================= */}
+      {isEditModalOpen && selectedUser && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 md:p-6">
           
-          {/* Kotak Utama Modal dengan batasan max-h-[85vh] */}
-          <div className="flex flex-col max-h-[85vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="flex flex-col max-h-[90vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
             
             {/* Header Modal (Statis) */}
             <div className="shrink-0 flex items-center justify-between px-7 py-6 border-b border-gray-100/80 bg-white/40">
@@ -278,10 +274,9 @@ export default function ManageUsers() {
               </button>
             </div>
 
-            {/* Isi Form (Scrollable) */}
+            {/* Isi Form (Bisa di-scroll) */}
             <form onSubmit={handleSaveChanges} className="overflow-y-auto p-7 space-y-6">
               
-              {/* --- SECTION 1: ROLE --- */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
                   <Shield size={16} className="text-[#2C71B8]" />
@@ -298,7 +293,6 @@ export default function ManageUsers() {
                 </select>
               </div>
 
-              {/* --- SECTION 2: AKUN --- */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
                   <Key size={16} className="text-[#2C71B8]" />
@@ -331,7 +325,6 @@ export default function ManageUsers() {
                 </div>
               </div>
 
-              {/* --- SECTION 3: PROFIL --- */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-800 border-b border-gray-100 pb-2">
                   <UserCircle size={16} className="text-[#2C71B8]" />
@@ -349,7 +342,6 @@ export default function ManageUsers() {
                   />
                 </div>
 
-                {/* FORM DINAMIS: NIM, PRODI, ANGKATAN */}
                 {selectedUser.role !== 'Pengunjung' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                     <div className="space-y-1.5">
@@ -442,7 +434,8 @@ export default function ManageUsers() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body // <-- INI YANG MEMBUATNYA MUNCUL DI LUAR SEGALA JEBAKAN LAYOUT
       )}
     </div>
   );
