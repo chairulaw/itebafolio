@@ -97,17 +97,28 @@ export default function ManageUsers() {
   };
 
   // 4. FUNGSI SIMPAN PERUBAHAN
-  const handleSaveChanges = async (e) => {
+ const handleSaveChanges = async (e) => {
     e.preventDefault();
 
+    // Pastikan email diubah ke huruf kecil semua untuk validasi yang akurat
+    const emailLower = selectedUser.email.toLowerCase();
     const isCivitas = selectedUser.role === 'Admin' || selectedUser.role === 'Mahasiswa';
-    if (isCivitas && !selectedUser.email.endsWith('@iteba.ac.id')) {
+    
+    // --- LAPISAN KEAMANAN EMAIL ---
+    // 1. Admin & Mahasiswa WAJIB pakai email kampus
+    if (isCivitas && !emailLower.endsWith('@iteba.ac.id')) {
       return toast.error("Admin dan Mahasiswa wajib menggunakan email dengan domain @iteba.ac.id!");
     }
 
+    // 2. Pengunjung TIDAK BOLEH pakai email kampus
+    if (selectedUser.role === 'Pengunjung' && emailLower.endsWith('@iteba.ac.id')) {
+      return toast.error("Pengunjung umum tidak diizinkan menggunakan email kampus (@iteba.ac.id)!");
+    }
+    // ------------------------------
+
     const toastId = toast.loading("Menyimpan perubahan...");
     try {
-      let newRoleId = 2; 
+      let newRoleId = 2; // Default Mahasiswa
       if (selectedUser.role === 'Admin') newRoleId = 1;
       if (selectedUser.role === 'Pengunjung') newRoleId = 3;
 
@@ -123,14 +134,15 @@ export default function ManageUsers() {
         role_id: newRoleId
       };
 
+      // Hanya kirim password jika admin mengisi field password
       if (selectedUser.password && selectedUser.password.trim() !== "") {
         payload.password = selectedUser.password;
       }
 
       await api.put(`/admin/users/${selectedUser.id}`, payload);
 
-      fetchUsers(); 
-      setIsEditModalOpen(false); 
+      fetchUsers(); // Refresh data tabel
+      setIsEditModalOpen(false); // Tutup modal
       toast.success("Data pengguna berhasil diperbarui!", { id: toastId });
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan server.", { id: toastId });
