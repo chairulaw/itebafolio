@@ -13,7 +13,7 @@ import {
   Folder,        
   ExternalLink
 } from 'lucide-react';
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast';
 import api from '../../utils/api';
 
 export default function ViolationLog() {
@@ -68,6 +68,9 @@ export default function ViolationLog() {
         const newStatus = isDelete ? 'resolved' : 'dismissed';
         await api.put(`/admin/violations/${id}`, { status: newStatus });
         setViolations(violations.map(v => v.id === id ? { ...v, status: newStatus } : v));
+        
+        // PESAN TOAST SUKSES DITAMBAHKAN
+        toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
       } catch (error) {
         toast.error("Gagal memproses tindakan.");
         console.error(error);
@@ -91,6 +94,9 @@ export default function ViolationLog() {
         
         setViolations(violations.map(v => v.id === selectedViolation.id ? { ...v, status: newStatus } : v));
         setSelectedViolation(null);
+        
+        // PESAN TOAST SUKSES DITAMBAHKAN
+        toast.success(isDelete ? "Konten melanggar berhasil dihapus." : "Laporan berhasil diabaikan.");
       } catch (error) {
         toast.error("Gagal memproses tindakan.");
         console.error(error);
@@ -231,30 +237,34 @@ export default function ViolationLog() {
                           <button 
                             onClick={() => setSelectedViolation(v)} 
                             title="Tinjau Konten" 
-                            className="p-2.5 text-gray-400 hover:text-[#2C71B8] hover:bg-blue-50 rounded-xl transition-colors"
+                            className="p-2 text-gray-400 hover:text-[#2C71B8] hover:bg-blue-50 rounded-xl transition-colors"
                           >
-                            <Eye size={18} strokeWidth={2.5} />
+                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
+                            <Eye size={22} strokeWidth={2.5} />
                           </button>
                           
                           <button 
                             onClick={() => handleAction(v.id, 'dismiss')} 
                             title="Abaikan Laporan" 
-                            className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                            className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
                           >
-                            <CheckCircle size={18} strokeWidth={2.5} />
+                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
+                            <CheckCircle size={22} strokeWidth={2.5} />
                           </button>
                           
                           <button 
                             onClick={() => handleAction(v.id, 'delete')} 
                             title="Hapus Konten" 
-                            className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                           >
-                            <Trash2 size={18} strokeWidth={2.5} />
+                            {/* UKURAN IKON DIPERBESAR MENJADI 22 */}
+                            <Trash2 size={22} strokeWidth={2.5} />
                           </button>
                         </div>
                       ) : (
-                        <button className="p-2.5 text-gray-300 hover:text-gray-600 rounded-xl transition-colors">
-                          <MoreVertical size={20} strokeWidth={2.5} />
+                        <button className="p-2 text-gray-300 hover:text-gray-600 rounded-xl transition-colors">
+                          {/* UKURAN IKON DIPERBESAR MENJADI 24 */}
+                          <MoreVertical size={24} strokeWidth={2.5} />
                         </button>
                       )}
                     </td>
@@ -340,7 +350,7 @@ export default function ViolationLog() {
                 onClick={() => handleModalAction('delete')}
                 className="flex-1 px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-sm shadow-red-500/30 flex items-center justify-center gap-2"
               >
-                <Trash2 size={18} /> Hapus Konten
+                <Trash2 size={20} /> Hapus Konten
               </button>
             </div>
 

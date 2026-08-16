@@ -227,13 +227,14 @@ export default function ManageUsers() {
         </div>
       </div>
 
-      {/* ========================================= */}
-      {/* MODAL EDIT PENGGUNA (DINAMIS & TERSTRUKTUR)*/}
-      {/* ========================================= */}
-      {isEditModalOpen && selectedUser && (
+     {isEditModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
-          <div className="bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between px-7 py-6 border-b border-gray-100/80 bg-white/40">
+          
+          {/* PERBAIKAN 1: Tambahkan flex, flex-col, dan max-h-[90vh] pada kotak utama */}
+          <div className="flex flex-col max-h-[90vh] bg-white/90 backdrop-blur-2xl rounded-[28px] w-full max-w-xl shadow-[0_40px_100px_-30px_rgba(0,0,0,0.45)] border border-white/60 overflow-hidden animate-in fade-in zoom-in duration-200">
+            
+            {/* PERBAIKAN 2: Tambahkan shrink-0 agar header tidak ikut menyusut saat di-scroll */}
+            <div className="shrink-0 flex items-center justify-between px-7 py-6 border-b border-gray-100/80 bg-white/40">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#2C71B8] mb-1">Enterprise Panel</p>
                 <h3 className="text-[19px] font-bold text-gray-900 tracking-tight">Edit Pengguna Lengkap</h3>
@@ -246,7 +247,8 @@ export default function ManageUsers() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveChanges} className="p-7 space-y-6 max-h-[75vh] overflow-y-auto">
+            {/* PERBAIKAN 3: Hapus max-h-[75vh], cukup gunakan overflow-y-auto */}
+            <form onSubmit={handleSaveChanges} className="overflow-y-auto p-7 space-y-6">
               
               {/* --- SECTION 1: ROLE --- */}
               <div className="space-y-3">
@@ -316,7 +318,7 @@ export default function ManageUsers() {
                   />
                 </div>
 
-                {/* FORM DINAMIS: NIM, PRODI, ANGKATAN (Tampil jika Admin/Mahasiswa) */}
+                {/* FORM DINAMIS: NIM, PRODI, ANGKATAN */}
                 {selectedUser.role !== 'Pengunjung' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                     <div className="space-y-1.5">
@@ -391,8 +393,8 @@ export default function ManageUsers() {
                 </div>
               </div>
 
-              {/* TOMBOL AKSI */}
-              <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-gray-100/80">
+              {/* PERBAIKAN 4: Tambahkan shrink-0 pada pembungkus tombol agar tidak tertekan */}
+              <div className="shrink-0 flex items-center justify-end gap-3 pt-4 mt-2 border-t border-gray-100/80">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
