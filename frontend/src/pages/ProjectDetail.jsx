@@ -249,7 +249,7 @@ export default function ProjectDetail() {
           <a
             href={fileUrl}
             target="_blank" rel="noreferrer"
-            className="px-6 py-2.5 bg-[var(--ink)] text-white font-semibold rounded-full text-sm hover:bg-[var(--cobalt)] transition-colors shadow-md"
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-[var(--ink)] !text-white font-semibold rounded-full text-sm hover:bg-[var(--cobalt)] transition-colors shadow-md"
           >
             Buka Dokumen
           </a>
