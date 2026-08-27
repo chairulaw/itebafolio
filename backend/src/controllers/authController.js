@@ -4,8 +4,8 @@ import { generateAccessToken } from "../utils/generateToken.js";
 
 // === REGISTER (PENDAFTARAN) ===
 export const register = async (req, res) => {
-   // 1. [PERBAIKAN] Tambahkan 'angkatan' di sini agar ditangkap dari frontend
-   const { nama_user, email, password, nim, prodi, angkatan } = req.body;
+    // 1. [PERBAIKAN] Tambahkan email_kontak dan no_wa agar ditangkap dari frontend
+    const { nama_user, email, password, nim, prodi, angkatan, email_kontak, no_wa } = req.body;
 
     try {
         let assignedRoleId = 3; // Default: 3 (Pengunjung)
@@ -16,19 +16,26 @@ export const register = async (req, res) => {
             if (!email.endsWith('@iteba.ac.id')) {
                 return res.status(400).json({ message: "Mahasiswa wajib menggunakan email @iteba.ac.id" });
             }
+            // Validasi email_kontak wajib untuk mahasiswa
+            if (!email_kontak) {
+                return res.status(400).json({ message: "Email Kontak (Publik) wajib diisi oleh mahasiswa!" });
+            }
             // Jika valid, berikan role Mahasiswa
             assignedRoleId = 2; 
         }
 
-        // Hash password dan simpan ke database seperti biasa...
+        // Hash password dan simpan ke database
         const hashedPassword = await bcrypt.hash(password, 10);
         await User.create({
             nama_user,
             email,
             password: hashedPassword,
-            nim: nim || null,     // Pengunjung NIM-nya null
-            prodi: prodi || null, // Pengunjung Prodi-nya null
-            angkatan: angkatan || null, // 2. [PERBAIKAN] Tambahkan 'angkatan' agar tersimpan di database
+            nim: nim || null,     
+            prodi: prodi || null, 
+            angkatan: angkatan || null, 
+            // 2. [PERBAIKAN] Simpan email kontak dan wa ke database
+            email_kontak: email_kontak || null,
+            no_wa: no_wa || null,
             role_id: assignedRoleId
         });
 

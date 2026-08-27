@@ -8,12 +8,17 @@ import api from '../utils/api';
 
 export default function Register() {
   // --- STATE LOGIC ---
-  const [registerType, setRegisterType] = useState('pengunjung'); // Default ke pengunjung
+  const [registerType, setRegisterType] = useState('pengunjung');
   const [namaUser, setNamaUser] = useState('');
   const [email, setEmail] = useState('');
   const [nim, setNim] = useState('');
   const [prodi, setProdi] = useState('');
   const [angkatan, setAngkatan] = useState('');
+  
+  // [TAMBAHAN STATE]
+  const [emailKontak, setEmailKontak] = useState('');
+  const [noWa, setNoWa] = useState('');
+  
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,44 +37,39 @@ export default function Register() {
     </div>
   ), []);
 
-  // --- HANDLER FUNGSI REGISTRASI & AUTO LOGIN ---
-// --- HANDLER FUNGSI REGISTRASI ---
+  // --- HANDLER FUNGSI REGISTRASI ---
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // 1. Validasi Password
     if (password !== confirmPassword) {
       return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
-    // 2. Validasi Email Pengunjung (TIDAK BOLEH pakai @iteba.ac.id)
     if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@iteba.ac.id')) {
       return toast.error("Pengunjung umum tidak dapat menggunakan email kampus (@iteba.ac.id).");
     }
 
-    // (Opsional) Validasi Email Mahasiswa (WAJIB pakai @iteba.ac.id)
     if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@iteba.ac.id')) {
       return toast.error("Mahasiswa ITEBA wajib menggunakan email kampus (@iteba.ac.id).");
     }
 
     setIsLoading(true);
     try {
-      // Payload dinamis
+      // Payload dinamis dengan tambahan email_kontak dan no_wa
       const payload = {
         nama_user: namaUser,
         email: email,
         password: password,
         nim: registerType === 'mahasiswa' ? nim : null,
         prodi: registerType === 'mahasiswa' ? prodi : null,
-        angkatan: registerType === 'mahasiswa' ? Number(angkatan) : null 
+        angkatan: registerType === 'mahasiswa' ? Number(angkatan) : null,
+        email_kontak: registerType === 'mahasiswa' ? emailKontak : null,
+        no_wa: registerType === 'mahasiswa' ? noWa : null
       };
 
-      // Eksekusi API Registrasi
       await api.post('/auth/register', payload);
 
       toast.success("Pendaftaran berhasil! Silakan masuk menggunakan akun Anda.");
-      
-      // Arahkan ke halaman login
       navigate('/login');
 
     } catch (error) {
@@ -81,7 +81,6 @@ export default function Register() {
 
   return (
     <div className="h-screen flex relative overflow-hidden bg-[#05070C]">
-
       {/* --- TOMBOL BACK MINIMALIS --- */}
       <Link
         to="/"
@@ -93,11 +92,10 @@ export default function Register() {
       {/* TAMPILKAN BACKGROUND YANG SUDAH DI-CACHE DI SINI */}
       {iridescenceBackground}
 
-      {/* Ambient depth layers di atas Iridescence — tidak mengganggu komponennya */}
       <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/40"></div>
       <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.08),transparent_55%)]"></div>
 
-      {/* Sisi Kiri: Teks (Hanya terlihat di Desktop) */}
+      {/* Sisi Kiri: Teks */}
       <div className="hidden md:flex w-1/2 h-full relative z-10 flex-col justify-between p-12 lg:p-16 text-white pointer-events-none">
         <div className="flex items-center gap-2.5 mt-10">
           <span className="w-1.5 h-1.5 rounded-full bg-white/70"></span>
@@ -125,7 +123,6 @@ export default function Register() {
       <div className="w-full md:w-1/2 h-full relative z-10 flex items-center justify-center p-6 md:p-10 overflow-y-auto">
         <div className={`w-full bg-white/95 md:bg-white/[0.07] backdrop-blur-2xl p-8 md:p-10 rounded-[28px] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.55)] border border-white/10 my-auto transition-[max-width] duration-300 ${registerType === 'mahasiswa' ? 'max-w-xl' : 'max-w-md'}`}>
 
-          {/* Mobile logo (since left panel is hidden) */}
           <img
             src={logoAuth}
             alt="Logo ITEBAFolio"
@@ -141,7 +138,7 @@ export default function Register() {
             </p>
           </div>
 
-          {/* --- TOGGLE TIPE AKUN — Premium Segmented Control --- */}
+          {/* --- TOGGLE TIPE AKUN --- */}
           <div className="relative flex p-1 bg-gray-100/80 md:bg-white/[0.06] rounded-full mb-5 border border-gray-200/60 md:border-white/10">
             <div
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white md:bg-white/[0.14] shadow-[0_4px_14px_-4px_rgba(0,0,0,0.2)] border border-gray-200/60 md:border-white/15 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -174,6 +171,7 @@ export default function Register() {
 
           <form className="space-y-3.5" onSubmit={handleRegister}>
             <div className="grid grid-cols-2 gap-4">
+              
               <div className={registerType === 'mahasiswa' ? '' : 'col-span-2'}>
                 <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
                 <input
@@ -185,7 +183,6 @@ export default function Register() {
                 />
               </div>
 
-              {/* --- INPUT KHUSUS MAHASISWA: NIM mendampingi Nama --- */}
               {registerType === 'mahasiswa' && (
                 <div className="animate-in fade-in duration-300">
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">NIM</label>
@@ -199,7 +196,6 @@ export default function Register() {
                 </div>
               )}
 
-              {/* --- INPUT KHUSUS MAHASISWA: Prodi & Angkatan berdampingan --- */}
               {registerType === 'mahasiswa' && (
                 <>
                   <div className="animate-in fade-in duration-300">
@@ -232,7 +228,7 @@ export default function Register() {
               )}
 
               <div className={registerType === 'mahasiswa' ? '' : 'col-span-2'}>
-                <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Email</label>
+                <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Email Kampus (Akun)</label>
                 <input
                   type="email"
                   value={email}
@@ -241,10 +237,22 @@ export default function Register() {
                   placeholder={registerType === 'mahasiswa' ? "email@iteba.ac.id" : "email@gmail.com"}
                   className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
                 />
-                {registerType === 'mahasiswa' && (
-                  <p className="text-[10px] text-gray-400 md:text-white/35 mt-1.5 ml-1">Gunakan email @iteba.ac.id</p>
-                )}
               </div>
+
+              {/* [TAMBAHAN] EMAIL KONTAK PUBLIK */}
+              {registerType === 'mahasiswa' && (
+                <div className="animate-in fade-in duration-300">
+                  <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Email Kontak (Publik)</label>
+                  <input
+                    type="email"
+                    value={emailKontak}
+                    onChange={(e) => setEmailKontak(e.target.value)}
+                    required={registerType === 'mahasiswa'} // Wajib Diisi
+                    placeholder="email.pribadi@gmail.com"
+                    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
+                  />
+                </div>
+              )}
 
               <div className={registerType === 'mahasiswa' ? '' : 'col-span-2'}>
                 <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Password</label>
@@ -269,6 +277,20 @@ export default function Register() {
                   className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
                 />
               </div>
+
+              {/* [TAMBAHAN] WHATSAPP */}
+              {registerType === 'mahasiswa' && (
+                <div className="col-span-2 animate-in fade-in duration-300">
+                  <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Nomor WhatsApp (Opsional)</label>
+                  <input
+                    type="number"
+                    value={noWa}
+                    onChange={(e) => setNoWa(e.target.value)}
+                    placeholder="Cth: 08123456789"
+                    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
+                  />
+                </div>
+              )}
             </div>
 
             <button

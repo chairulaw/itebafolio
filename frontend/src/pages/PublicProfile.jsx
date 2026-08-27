@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  Link as LinkIcon, Heart, Award, Sparkles, Crown, Zap, FileQuestion, ArrowLeft, Mail
+  Link as LinkIcon, Heart, Award, Sparkles, Crown, Zap, FileQuestion, ArrowLeft, Mail, MessageCircle
 } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import api from '../utils/api';
@@ -144,6 +144,18 @@ export default function PublicProfile() {
                     <Mail size={14} /> Hubungi Mahasiswa
                   </a>
                 )}
+
+                {profileData.no_wa && (
+  <a
+    // Mengubah awalan '0' menjadi '62' otomatis agar link wa.me berfungsi
+    href={`https://wa.me/${profileData.no_wa.startsWith('0') ? '62' + profileData.no_wa.slice(1) : profileData.no_wa}?text=Halo%20${profileData.nama_user},%20saya%20melihat%20portofolio%20Anda%20di%20ITEBAFolio.%20Bisa%20kita%20berdiskusi?`}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-green-500/30 hover:-translate-y-0.5"
+  >
+    <MessageCircle size={14} /> WhatsApp
+  </a>
+)}
               </div>
             )}
           </div>
