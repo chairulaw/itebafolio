@@ -1,4 +1,4 @@
-import { Heart, ChevronLeft, ChevronRight, Send, FileText, ExternalLink, Music, Maximize2 } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, Send, FileText, ExternalLink, Music, Maximize2, Lock } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast from 'react-hot-toast'
@@ -78,7 +78,7 @@ export default function ProjectDetail() {
 
   const [project, setProject] = useState(null);
   const [comments, setComments] = useState([]);
-  const [categories, setCategories] = useState([]); // <--- State Kategori Baru
+  const [categories, setCategories] = useState([]); 
   const [isLoading, setIsLoading] = useState(true);
 
   const [liked, setLiked] = useState(false);
@@ -89,6 +89,8 @@ export default function ProjectDetail() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
+  // --- PENAMBAHAN STATUS LOGIN ---
+  const isLoggedIn = !!currentUser; 
 
   // Muat pasangan tipografi khusus halaman ini
   useEffect(() => {
@@ -102,7 +104,6 @@ export default function ProjectDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERBAIKAN: Gunakan Promise.all untuk mengambil semua data sekaligus
         const [projectRes, commentsRes, categoriesRes] = await Promise.all([
           api.get(`/projects/${id}`),
           api.get(`/projects/${id}/comments`),
@@ -118,7 +119,7 @@ export default function ProjectDetail() {
         }
 
         setComments(commentsRes.data);
-        setCategories(categoriesRes.data); // <--- SIMPAN DATA KATEGORI
+        setCategories(categoriesRes.data); 
       } catch (error) {
         toast.error("Karya tidak ditemukan");
         navigate('/');
@@ -150,23 +151,19 @@ export default function ProjectDetail() {
     try {
       const res = await api.post(`/projects/${id}/comments`, { komentar: newComment });
 
-      // 1. Cek apakah ada pesan warning eksplisit dari backend
       if (res.data.warning) {
         toast.error(`Sistem Moderasi: ${res.data.warning}`, { duration: 5000 });
       } 
-      // 2. DETEKSI CERDAS: Jika teks yang dikirim BERBEDA dengan yang dikembalikan server (berarti disensor)
       else if (res.data.data && res.data.data.komentar !== newComment) {
         toast.error("Sistem Moderasi: Komentar Anda mengandung kata tidak pantas dan telah disensor otomatis.", { 
           duration: 5000,
           icon: '🚨' 
         });
       } 
-      // 3. Jika komentar aman dan tidak ada perubahan
       else {
         toast.success("Komentar berhasil ditambahkan!");
       }
 
-      // Masukkan komentar ke daftar tampilan
       if (res.data.data) {
         setComments((prev) => [res.data.data, ...prev]);
       }
@@ -200,7 +197,6 @@ export default function ProjectDetail() {
   const creatorName = project.user?.nama_user || "Nama akun";
   const creatorAvatar = project.user?.avatar ? `/uploads/${project.user.avatar}` : DEFAULT_AVATAR;
 
-  // PERBAIKAN: Cocokkan ID dari project dengan ID yang ada di database kategori
   const matchedCategory = categories.find(c => String(c.id) === String(project.kategori_id));
   const categoryName = matchedCategory 
     ? matchedCategory.nama_kategori 
@@ -213,7 +209,6 @@ export default function ProjectDetail() {
   const archiveYear = createdDate ? createdDate.getFullYear() : new Date().getFullYear();
   const archiveNo = String(project.id ?? id).padStart(3, '0');
 
-  // Parsing Media Highlight
   let highlightFiles = [];
   if (project.highlight) {
     try {
@@ -222,7 +217,6 @@ export default function ProjectDetail() {
     } catch (e) { }
   }
 
-  // Parsing Media Tambahan
   let additionalFiles = [];
   if (project.additional_media) {
     try {
@@ -249,7 +243,7 @@ export default function ProjectDetail() {
           <a
             href={fileUrl}
             target="_blank" rel="noreferrer"
-            className="inline-flex items-center justify-center px-6 py-2.5 bg-[var(--ink)] !text-white font-semibold rounded-full text-sm hover:bg-[var(--cobalt)] transition-colors shadow-md"
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-[var(--ink)] !text-white font-semibold rounded-full text-sm hover:bg-[var(--cobalt)] transition-colors shadow-md pointer-events-auto"
           >
             Buka Dokumen
           </a>
@@ -259,7 +253,7 @@ export default function ProjectDetail() {
 
     if (type === 'video') {
       return (
-        <video src={fileUrl} controls className="w-full h-full object-contain bg-black rounded-[16px] md:rounded-[22px]">
+        <video src={fileUrl} controls className="w-full h-full object-contain bg-black rounded-[16px] md:rounded-[22px] pointer-events-auto">
           Browser Anda tidak mendukung tag video.
         </video>
       );
@@ -273,7 +267,7 @@ export default function ProjectDetail() {
             <Music size={32} className="text-[#9DB3F5]" />
           </div>
           <h4 className="text-white font-bold text-base mb-6 tracking-[0.25em] uppercase relative z-10" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Audio Track</h4>
-          <audio src={fileUrl} controls className="w-full max-w-sm relative z-10" />
+          <audio src={fileUrl} controls className="w-full max-w-sm relative z-10 pointer-events-auto" />
         </div>
       );
     }
@@ -283,7 +277,7 @@ export default function ProjectDetail() {
     }
 
     return (
-      <div className="bg-white p-8 text-center">
+      <div className="bg-white p-8 text-center pointer-events-auto">
         <p className="text-gray-800 font-medium">Format file tidak didukung untuk pratinjau.</p>
         <a href={fileUrl} target="_blank" rel="noreferrer" className="text-[var(--cobalt)] underline mt-2 block font-semibold">Download File</a>
       </div>
@@ -422,37 +416,54 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* ============ 5. DESKRIPSI ============ */}
+        {/* ============ 5. DESKRIPSI (LOGIN-WALL DITERAPKAN) ============ */}
         <Reveal className="max-w-[760px] mx-auto px-6 mb-16">
-          <div className="rounded-[28px] bg-white/50 backdrop-blur-2xl border border-[var(--line)] shadow-[0_20px_60px_-30px_rgba(25,27,32,0.18)] p-7 md:p-12">
+          <div className="rounded-[28px] bg-white/50 backdrop-blur-2xl border border-[var(--line)] shadow-[0_20px_60px_-30px_rgba(25,27,32,0.18)] p-7 md:p-12 relative overflow-hidden">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Deskripsi Karya</span>
               <span className="flex-1 h-px bg-gradient-to-r from-[var(--line)] to-transparent"></span>
             </div>
 
-            <div
-              className="drop-cap text-gray-600 leading-[1.9] text-[15.5px] md:text-[17px] whitespace-pre-wrap text-left"
-              style={{ fontFamily: "'Source Serif 4', serif" }}
-            >
-              {project.deskripsi}
+            {/* Pengecekan Login untuk Teks Deskripsi */}
+            <div className={`transition-all duration-300 ${!isLoggedIn ? 'max-h-[160px] overflow-hidden blur-[4px] select-none pointer-events-none' : ''}`}>
+              <div
+                className="drop-cap text-gray-600 leading-[1.9] text-[15.5px] md:text-[17px] whitespace-pre-wrap text-left"
+                style={{ fontFamily: "'Source Serif 4', serif" }}
+              >
+                {project.deskripsi}
+              </div>
+
+              {project.link_project && (
+                <div className="mt-9 pt-8 border-t border-[var(--line)]">
+                  <a
+                    href={project.link_project.startsWith('http') ? project.link_project : `https://${project.link_project}`}
+                    target="_blank" rel="noreferrer"
+                    className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[var(--ink)] !text-white hover:!text-white font-semibold text-[13px] md:text-[14px] tracking-wide shadow-[0_12px_30px_-10px_rgba(25,27,32,0.4)] hover:shadow-[0_16px_36px_-8px_rgba(25,27,32,0.45)] hover:bg-[var(--cobalt)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 pointer-events-auto"
+                  >
+                    Kunjungi Project
+                    <ExternalLink size={16} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </a>
+                </div>
+              )}
             </div>
 
-            {project.link_project && (
-              <div className="mt-9 pt-8 border-t border-[var(--line)]">
-                <a
-                  href={project.link_project.startsWith('http') ? project.link_project : `https://${project.link_project}`}
-                  target="_blank" rel="noreferrer"
-                  className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[var(--ink)] !text-white hover:!text-white font-semibold text-[13px] md:text-[14px] tracking-wide shadow-[0_12px_30px_-10px_rgba(25,27,32,0.4)] hover:shadow-[0_16px_36px_-8px_rgba(25,27,32,0.45)] hover:bg-[var(--cobalt)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-                >
-                  Kunjungi Project
-                  <ExternalLink size={16} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </a>
+            {/* Overlay Gembok Deskripsi */}
+            {!isLoggedIn && (
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--paper)] via-white/80 to-transparent flex flex-col items-center justify-end pb-8 z-10">
+                <div className="bg-white p-5 md:p-6 rounded-2xl shadow-xl border border-[var(--line)] flex flex-col items-center text-center max-w-sm w-full mx-4 backdrop-blur-md">
+                  <Lock size={28} className="text-[var(--cobalt)] mb-3" />
+                  <h4 className="text-[17px] font-bold text-gray-900 mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Konten Eksklusif</h4>
+                  <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">Masuk ke akun Anda untuk membaca keseluruhan riset, inovasi, dan mengunjungi tautan eksternal.</p>
+                  <Link to="/login" className="bg-[var(--ink)] text-white text-[13px] font-semibold px-6 py-3 rounded-full w-full hover:bg-[var(--cobalt)] transition-colors shadow-md">
+                    Login / Daftar Sekarang
+                  </Link>
+                </div>
               </div>
             )}
           </div>
         </Reveal>
 
-        {/* ============ 6. HIGHLIGHT MEDIA (carousel, hanya tampil jika ada) ============ */}
+        {/* ============ 6. HIGHLIGHT MEDIA (LOGIN-WALL DITERAPKAN) ============ */}
         {highlightFiles.length > 0 && (
           <Reveal className="relative w-full max-w-[1500px] mx-auto mb-24 md:mb-28 px-2 md:px-6">
             <div className="flex items-center gap-3 mb-6 max-w-[760px] mx-auto px-4">
@@ -461,73 +472,83 @@ export default function ProjectDetail() {
               <span className="text-[10px] font-medium text-gray-400" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{currentIndex + 1}/{highlightFiles.length}</span>
             </div>
 
-            <div className="relative h-[34vh] sm:h-[48vh] md:h-[68vh] flex items-center justify-center overflow-hidden select-none group">
+            <div className="relative">
+              {/* Pembungkus Slider dengan Efek Blur */}
+              <div className={!isLoggedIn ? 'blur-md pointer-events-none select-none' : ''}>
+                <div className="relative h-[34vh] sm:h-[48vh] md:h-[68vh] flex items-center justify-center overflow-hidden select-none group">
+                  <div className="absolute inset-y-0 left-0 w-1/5 md:w-1/4 bg-gradient-to-r from-[var(--paper)] via-[var(--paper)]/80 to-transparent z-20 pointer-events-none"></div>
+                  <div className="absolute inset-y-0 right-0 w-1/5 md:w-1/4 bg-gradient-to-l from-[var(--paper)] via-[var(--paper)]/80 to-transparent z-20 pointer-events-none"></div>
 
-              <div className="absolute inset-y-0 left-0 w-1/5 md:w-1/4 bg-gradient-to-r from-[var(--paper)] via-[var(--paper)]/80 to-transparent z-20 pointer-events-none"></div>
-              <div className="absolute inset-y-0 right-0 w-1/5 md:w-1/4 bg-gradient-to-l from-[var(--paper)] via-[var(--paper)]/80 to-transparent z-20 pointer-events-none"></div>
+                  {highlightFiles.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-3 md:left-[6%] top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/70 backdrop-blur-xl border border-[var(--line)] rounded-full flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(0,0,0,0.18)] text-gray-700 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto"
+                      >
+                        <ChevronLeft size={24} strokeWidth={2.5} />
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-3 md:right-[6%] top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/70 backdrop-blur-xl border border-[var(--line)] rounded-full flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(0,0,0,0.18)] text-gray-700 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto"
+                      >
+                        <ChevronRight size={24} strokeWidth={2.5} />
+                      </button>
+                    </>
+                  )}
 
-              {highlightFiles.length > 1 && (
-                <>
-                  <button
-                    onClick={prevSlide}
-                    aria-label="Sebelumnya"
-                    className="absolute left-3 md:left-[6%] top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/70 backdrop-blur-xl border border-[var(--line)] rounded-full flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(0,0,0,0.18)] text-gray-700 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300"
-                  >
-                    <ChevronLeft size={24} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    aria-label="Berikutnya"
-                    className="absolute right-3 md:right-[6%] top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/70 backdrop-blur-xl border border-[var(--line)] rounded-full flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(0,0,0,0.18)] text-gray-700 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300"
-                  >
-                    <ChevronRight size={24} strokeWidth={2.5} />
-                  </button>
-                </>
-              )}
+                  {highlightFiles.map((file, i) => {
+                    let state = "hidden";
+                    if (i === currentIndex) state = "active";
+                    else if (i === currentIndex - 1 || (currentIndex === 0 && i === highlightFiles.length - 1)) state = "prev";
+                    else if (i === currentIndex + 1 || (currentIndex === highlightFiles.length - 1 && i === 0)) state = "next";
 
-              {highlightFiles.map((file, i) => {
-                let state = "hidden";
-                if (i === currentIndex) state = "active";
-                else if (i === currentIndex - 1 || (currentIndex === 0 && i === highlightFiles.length - 1)) state = "prev";
-                else if (i === currentIndex + 1 || (currentIndex === highlightFiles.length - 1 && i === 0)) state = "next";
+                    const baseClass = "absolute h-full flex items-center justify-center transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] w-[88%] md:w-[62%]";
+                    let stateClass = "";
+                    if (state === "active") stateClass = "z-30 translate-x-0 scale-100 opacity-100";
+                    else if (state === "prev") stateClass = "z-10 -translate-x-[58%] scale-[0.82] opacity-40";
+                    else if (state === "next") stateClass = "z-10 translate-x-[58%] scale-[0.82] opacity-40";
+                    else stateClass = "z-0 opacity-0 scale-50 hidden";
 
-                const baseClass = "absolute h-full flex items-center justify-center transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] w-[88%] md:w-[62%]";
-
-                let stateClass = "";
-                if (state === "active") stateClass = "z-30 translate-x-0 scale-100 opacity-100";
-                else if (state === "prev") stateClass = "z-10 -translate-x-[58%] scale-[0.82] opacity-40";
-                else if (state === "next") stateClass = "z-10 translate-x-[58%] scale-[0.82] opacity-40";
-                else stateClass = "z-0 opacity-0 scale-50 hidden";
-
-                return (
-                  <div key={i} className={`${baseClass} ${stateClass}`}>
-                    <div className="relative w-full h-full rounded-[20px] md:rounded-[28px] p-[6px] md:p-2 bg-white/40 backdrop-blur-2xl border border-[var(--line)] shadow-[0_30px_80px_-20px_rgba(25,27,32,0.25)]">
-                      <div className="w-full h-full rounded-[16px] md:rounded-[22px] overflow-hidden flex items-center justify-center bg-black/[0.02] relative">
-                        {renderMediaBlock(file)}
-                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/15 via-transparent to-transparent"></div>
+                    return (
+                      <div key={i} className={`${baseClass} ${stateClass}`}>
+                        <div className="relative w-full h-full rounded-[20px] md:rounded-[28px] p-[6px] md:p-2 bg-white/40 backdrop-blur-2xl border border-[var(--line)] shadow-[0_30px_80px_-20px_rgba(25,27,32,0.25)]">
+                          <div className="w-full h-full rounded-[16px] md:rounded-[22px] overflow-hidden flex items-center justify-center bg-black/[0.02] relative">
+                            {renderMediaBlock(file)}
+                            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/15 via-transparent to-transparent"></div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
 
-            {highlightFiles.length > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
-                {highlightFiles.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentIndex(i)}
-                    aria-label={`Ke media ${i + 1}`}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${i === currentIndex ? "w-6 bg-[var(--ink)]" : "w-1.5 bg-gray-300 hover:bg-gray-400"}`}
-                  ></button>
-                ))}
+                {highlightFiles.length > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6 pointer-events-auto">
+                    {highlightFiles.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentIndex(i)}
+                        className={`h-1.5 rounded-full transition-all duration-500 ${i === currentIndex ? "w-6 bg-[var(--ink)]" : "w-1.5 bg-gray-300 hover:bg-gray-400"}`}
+                      ></button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Overlay Gembok Highlight Media */}
+              {!isLoggedIn && (
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] flex items-center justify-center z-50">
+                  <Link to="/login" className="bg-white/95 backdrop-blur-xl px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-3 border border-[var(--line)] hover:bg-[var(--ink)] hover:text-white transition-colors group cursor-pointer">
+                    <Lock size={18} className="text-gray-700 group-hover:text-white transition-colors" />
+                    <span className="text-[13px] font-bold text-gray-800 group-hover:text-white tracking-wide transition-colors">Login untuk melihat Dokumentasi & Preview</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </Reveal>
         )}
 
-        {/* ============ 7. MEDIA TAMBAHAN — grid besar, jadi sorotan tersendiri ============ */}
+        {/* ============ 7. MEDIA TAMBAHAN (LOGIN-WALL DITERAPKAN) ============ */}
         {additionalFiles.length > 0 && (
           <Reveal className="max-w-[1100px] mx-auto mb-24 md:mb-28 px-4 md:px-6">
             <div className="flex items-center gap-3 mb-7 px-2">
@@ -536,74 +557,87 @@ export default function ProjectDetail() {
               <span className="text-[10px] font-medium text-gray-400" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{additionalFiles.length} berkas</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-7">
-              {additionalFiles.map((file, idx) => {
-                const fileUrl = `/uploads/${file}`;
-                const type = getFileType(file);
-                const isWide = type === 'pdf' || type === 'other';
+            <div className="relative">
+              {/* Pembungkus Grid dengan Efek Blur */}
+              <div className={!isLoggedIn ? 'blur-md pointer-events-none select-none' : ''}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-7">
+                  {additionalFiles.map((file, idx) => {
+                    const fileUrl = `/uploads/${file}`;
+                    const type = getFileType(file);
+                    const isWide = type === 'pdf' || type === 'other';
 
-                return (
-                  <div
-                    key={idx}
-                    className={`media-tile relative rounded-[26px] p-[6px] md:p-2 bg-white/40 backdrop-blur-2xl border border-[var(--line)] shadow-[0_20px_50px_-25px_rgba(25,27,32,0.25)] hover:shadow-[0_24px_60px_-20px_rgba(25,27,32,0.3)] transition-shadow duration-300 ${isWide ? 'sm:col-span-2' : ''}`}
-                  >
-                    <div className={`relative w-full rounded-[20px] overflow-hidden flex items-center justify-center bg-black/[0.02] ${isWide ? 'min-h-[120px]' : 'aspect-[4/3]'}`}>
+                    return (
+                      <div
+                        key={idx}
+                        className={`media-tile relative rounded-[26px] p-[6px] md:p-2 bg-white/40 backdrop-blur-2xl border border-[var(--line)] shadow-[0_20px_50px_-25px_rgba(25,27,32,0.25)] hover:shadow-[0_24px_60px_-20px_rgba(25,27,32,0.3)] transition-shadow duration-300 ${isWide ? 'sm:col-span-2' : ''}`}
+                      >
+                        <div className={`relative w-full rounded-[20px] overflow-hidden flex items-center justify-center bg-black/[0.02] ${isWide ? 'min-h-[120px]' : 'aspect-[4/3]'}`}>
+                          {type === 'image' && (
+                            <>
+                              <img src={fileUrl} alt={`Lampiran ${idx + 1}`} className="media-tile-img w-full h-full object-cover" />
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="media-tile-overlay absolute inset-0 flex items-end justify-end p-4 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 pointer-events-auto"
+                              >
+                                <span className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                                  <Maximize2 size={16} className="text-[var(--ink)]" />
+                                </span>
+                              </a>
+                            </>
+                          )}
 
-                      {type === 'image' && (
-                        <>
-                          <img src={fileUrl} alt={`Lampiran ${idx + 1}`} className="media-tile-img w-full h-full object-cover" />
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="media-tile-overlay absolute inset-0 flex items-end justify-end p-4 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300"
-                            aria-label="Lihat gambar penuh"
-                          >
-                            <span className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md">
-                              <Maximize2 size={16} className="text-[var(--ink)]" />
-                            </span>
-                          </a>
-                        </>
-                      )}
+                          {type === 'video' && (
+                            <video src={fileUrl} controls className="w-full h-full object-cover bg-black pointer-events-auto" />
+                          )}
 
-                      {type === 'video' && (
-                        <video src={fileUrl} controls className="w-full h-full object-cover bg-black" />
-                      )}
+                          {type === 'audio' && (
+                            <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-950 to-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
+                              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_30%,rgba(44,79,196,0.5),transparent_60%)]"></div>
+                              <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center mb-5 relative z-10">
+                                <Music size={26} className="text-[#9DB3F5]" />
+                              </div>
+                              <p className="text-white text-[12px] font-semibold mb-4 truncate max-w-full relative z-10" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{file}</p>
+                              <audio src={fileUrl} controls className="w-full max-w-xs relative z-10 pointer-events-auto" />
+                            </div>
+                          )}
 
-                      {type === 'audio' && (
-                        <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-950 to-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_30%,rgba(44,79,196,0.5),transparent_60%)]"></div>
-                          <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center mb-5 relative z-10">
-                            <Music size={26} className="text-[#9DB3F5]" />
-                          </div>
-                          <p className="text-white text-[12px] font-semibold mb-4 truncate max-w-full relative z-10" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{file}</p>
-                          <audio src={fileUrl} controls className="w-full max-w-xs relative z-10" />
+                          {isWide && (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group/doc flex items-center gap-5 w-full p-6 hover:bg-white/40 transition-colors duration-300 pointer-events-auto"
+                            >
+                              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center shrink-0 group-hover/doc:bg-[var(--cobalt)] transition-colors duration-300">
+                                <FileText size={28} className="text-red-500 group-hover/doc:text-white transition-colors duration-300" />
+                              </div>
+                              <div className="min-w-0 text-left">
+                                <p className="text-[15px] font-bold text-gray-900 truncate group-hover/doc:text-[var(--cobalt)] transition-colors">
+                                  {file}
+                                </p>
+                                <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Klik untuk membuka dokumen</p>
+                              </div>
+                              <ExternalLink size={18} className="ml-auto shrink-0 text-gray-300 group-hover/doc:text-[var(--cobalt)] transition-colors" />
+                            </a>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-                      {isWide && (
-                        <a
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group/doc flex items-center gap-5 w-full p-6 hover:bg-white/40 transition-colors duration-300"
-                        >
-                          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center shrink-0 group-hover/doc:bg-[var(--cobalt)] transition-colors duration-300">
-                            <FileText size={28} className="text-red-500 group-hover/doc:text-white transition-colors duration-300" />
-                          </div>
-                          <div className="min-w-0 text-left">
-                            <p className="text-[15px] font-bold text-gray-900 truncate group-hover/doc:text-[var(--cobalt)] transition-colors">
-                              {file}
-                            </p>
-                            <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Klik untuk membuka dokumen</p>
-                          </div>
-                          <ExternalLink size={18} className="ml-auto shrink-0 text-gray-300 group-hover/doc:text-[var(--cobalt)] transition-colors" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {/* Overlay Gembok Media Tambahan */}
+              {!isLoggedIn && (
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] flex items-center justify-center z-50 rounded-[26px]">
+                  <Link to="/login" className="bg-white/95 backdrop-blur-xl px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-3 border border-[var(--line)] hover:bg-[var(--ink)] hover:text-white transition-colors group cursor-pointer">
+                    <Lock size={18} className="text-gray-700 group-hover:text-white transition-colors" />
+                    <span className="text-[13px] font-bold text-gray-800 group-hover:text-white tracking-wide transition-colors">Login untuk mengakses Lampiran Media</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </Reveal>
         )}
