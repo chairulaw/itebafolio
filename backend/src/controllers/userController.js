@@ -27,7 +27,7 @@ export const getPublicUserById = async (req, res) => {
         
         // Cari user berdasarkan ID, tapi KECUALIKAN password dan email (demi keamanan)
         const user = await User.findByPk(userId, {
-            attributes: ['id', 'nama_user', 'avatar', 'bio', 'prodi', 'angkatan', 'website', 'role_id'] 
+            attributes: ['id', 'nama_user', 'avatar', 'bio', 'prodi', 'angkatan', 'website', 'role_id', 'email_kontak'] 
         });
 
         if (!user) {
