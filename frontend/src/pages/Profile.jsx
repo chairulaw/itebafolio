@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Link as LinkIcon, Plus,
-  Heart, Award, Sparkles, TrendingUp, Crown, Rocket, Zap,
-  Eye, Layers, Star, ArrowUpRight, Share2, BarChart3, Users, Flame, Heart, MessageCircle, ExternalLink, Clock
+  Heart, Award, Sparkles, Crown,  Zap,
+  Eye, Layers, ArrowUpRight,  MessageCircle, ExternalLink, Clock
 } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import api from '../utils/api';
