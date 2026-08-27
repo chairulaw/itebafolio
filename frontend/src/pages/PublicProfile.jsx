@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  Link as LinkIcon, Heart, Award, Sparkles, Crown, Zap, FileQuestion, ArrowLeft
+  Link as LinkIcon, Heart, Award, Sparkles, Crown, Zap, FileQuestion, ArrowLeft, Mail // <-- Tambah import Mail
 } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import api from '../utils/api';
@@ -9,7 +9,7 @@ import api from '../utils/api';
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
 
 export default function PublicProfile() {
-  const { id } = useParams(); // Mengambil ID dari URL
+  const { id } = useParams();
   const [profileData, setProfileData] = useState(null);
   const [displayProjects, setDisplayProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,19 +18,14 @@ export default function PublicProfile() {
     const fetchPublicProfile = async () => {
       setIsLoading(true);
       try {
-        // 1. Ambil data profil user berdasarkan ID
-        // (Pastikan endpoint GET /users/:id ini tersedia secara publik di backend Anda)
         const userRes = await api.get(`/users/${id}`);
         const userData = userRes.data;
         setProfileData(userData);
 
-        // 2. Tentukan apa yang harus ditampilkan berdasarkan Role
         if (userData.role_id !== 3) {
-          // Jika Mahasiswa: Ambil karya yang mereka buat
           const projectRes = await api.get(`/projects?user_id=${id}`);
           setDisplayProjects(projectRes.data);
         } else {
-          // Jika Pengunjung: Ambil karya yang mereka Like
           const allProjectsRes = await api.get('/projects');
           const likedProjects = allProjectsRes.data.filter(project => {
             const projectLikes = project.Likes || project.likes || [];
@@ -131,11 +126,32 @@ export default function PublicProfile() {
               {profileData.bio || "Pengguna ini belum menambahkan deskripsi diri."}
             </p>
 
-            {profileData.website && (
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-5">
-                <a href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all ${isPengunjung ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-blue-50 text-[#2C71B8] hover:bg-blue-100'}`}>
-                  <LinkIcon size={12} /> Tautan Eksternal
-                </a>
+            {/* --- KELOMPOK TOMBOL KONTAK & WEBSITE --- */}
+            {(profileData.website || profileData.email_kontak) && (
+              <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-5">
+                
+                {/* Tombol Tautan Eksternal */}
+                {profileData.website && (
+                  <a 
+                    href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-bold transition-all ${isPengunjung ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-blue-50 text-[#2C71B8] hover:bg-blue-100'}`}
+                  >
+                    <LinkIcon size={14} /> Tautan Eksternal
+                  </a>
+                )}
+
+                {/* Tombol Hubungi Mahasiswa (Baru) */}
+                {profileData.email_kontak && (
+                  <a
+                    href={`mailto:${profileData.email_kontak}?subject=Halo! Saya tertarik dengan karya Anda di ITEBAFolio`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2C71B8] hover:bg-[#235a93] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#2C71B8]/30 hover:-translate-y-0.5"
+                  >
+                    <Mail size={14} /> Hubungi Mahasiswa
+                  </a>
+                )}
+
               </div>
             )}
           </div>
@@ -159,7 +175,6 @@ export default function PublicProfile() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8">
               {displayProjects.map((project, i) => (
                 <div key={project.id} className="animate-in zoom-in-95 fade-in duration-500" style={{ animationDelay: `${i * 60}ms` }}>
-                  {/* isOwner di-set false agar pengunjung lain tidak bisa menghapus/mengedit karya dari sini */}
                   <ProjectCard project={project} isOwner={false} />
                 </div>
               ))}
