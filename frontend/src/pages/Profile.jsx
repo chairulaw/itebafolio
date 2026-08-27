@@ -86,7 +86,7 @@ useEffect(() => {
             setTotalGivenLikes(likedProjectsCount);
 
             // 2. Ambil data Riwayat Komentar (Panggilan API Baru)
-            const commentsRes = await api.get(`/comments/user/${userData.id}`);
+            const commentsRes = await api.get(`/projects/comments/user/${userData.id}`);
             setCommentedProjects(commentsRes.data);
 
           } catch (error) {
