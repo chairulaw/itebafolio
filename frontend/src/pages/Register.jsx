@@ -7,25 +7,20 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 export default function Register() {
-  // --- STATE LOGIC ---
   const [registerType, setRegisterType] = useState('pengunjung');
   const [namaUser, setNamaUser] = useState('');
   const [email, setEmail] = useState('');
   const [nim, setNim] = useState('');
   const [prodi, setProdi] = useState('');
   const [angkatan, setAngkatan] = useState('');
-  
-  // [TAMBAHAN STATE]
   const [emailKontak, setEmailKontak] = useState('');
   const [noWa, setNoWa] = useState('');
-  
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // --- MEMOIZATION BACKGROUND ---
   const iridescenceBackground = useMemo(() => (
     <div className="absolute inset-0 z-0">
       <Iridescence
@@ -37,7 +32,6 @@ export default function Register() {
     </div>
   ), []);
 
-  // --- HANDLER FUNGSI REGISTRASI ---
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -45,19 +39,16 @@ export default function Register() {
       return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
-    // Validasi Email Pengunjung 
-if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@student.iteba.ac.id')) {
-    return toast.error("Pengunjung umum tidak dapat menggunakan email kampus (@student.iteba.ac.id).");
-}
+    if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@student.iteba.ac.id')) {
+      return toast.error("Pengunjung umum tidak dapat menggunakan email kampus.");
+    }
 
-// Validasi Email Mahasiswa
-if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteba.ac.id')) {
-    return toast.error("Mahasiswa ITEBA wajib menggunakan email kampus (@student.iteba.ac.id).");
-}
+    if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteba.ac.id')) {
+      return toast.error("Mahasiswa ITEBA wajib menggunakan email @student.iteba.ac.id");
+    }
 
     setIsLoading(true);
     try {
-      // Payload dinamis dengan tambahan email_kontak dan no_wa
       const payload = {
         nama_user: namaUser,
         email: email,
@@ -83,7 +74,6 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
 
   return (
     <div className="h-screen flex relative overflow-hidden bg-[#05070C]">
-      {/* --- TOMBOL BACK MINIMALIS --- */}
       <Link
         to="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 z-50 flex items-center justify-center w-11 h-11 text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-xl rounded-full transition-all duration-300 hover:-translate-x-1 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)]"
@@ -91,13 +81,11 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
         <ArrowLeft size={19} />
       </Link>
 
-      {/* TAMPILKAN BACKGROUND YANG SUDAH DI-CACHE DI SINI */}
       {iridescenceBackground}
 
       <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/40"></div>
       <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.08),transparent_55%)]"></div>
 
-      {/* Sisi Kiri: Teks */}
       <div className="hidden md:flex w-1/2 h-full relative z-10 flex-col justify-between p-12 lg:p-16 text-white pointer-events-none">
         <div className="flex items-center gap-2.5 mt-10">
           <span className="w-1.5 h-1.5 rounded-full bg-white/70"></span>
@@ -121,7 +109,6 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
         <p className="text-[11px] text-white/35 tracking-wide">© {new Date().getFullYear()} ITEBAFolio. Semua hak dilindungi.</p>
       </div>
 
-      {/* Sisi Kanan: Formulir Registrasi */}
       <div className="w-full md:w-1/2 h-full relative z-10 flex items-center justify-center p-6 md:p-10 overflow-y-auto">
         <div className={`w-full bg-white/95 md:bg-white/[0.07] backdrop-blur-2xl p-8 md:p-10 rounded-[28px] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.55)] border border-white/10 my-auto transition-[max-width] duration-300 ${registerType === 'mahasiswa' ? 'max-w-xl' : 'max-w-md'}`}>
 
@@ -140,7 +127,6 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
             </p>
           </div>
 
-          {/* --- TOGGLE TIPE AKUN --- */}
           <div className="relative flex p-1 bg-gray-100/80 md:bg-white/[0.06] rounded-full mb-5 border border-gray-200/60 md:border-white/10">
             <div
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white md:bg-white/[0.14] shadow-[0_4px_14px_-4px_rgba(0,0,0,0.2)] border border-gray-200/60 md:border-white/15 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -236,12 +222,11 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder={registerType === 'mahasiswa' ? "email@student.iteba.ac.id" : "email@gmail.com"}
+                  placeholder={registerType === 'mahasiswa' ? "nim@student.iteba.ac.id" : "email@gmail.com"}
                   className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
                 />
               </div>
 
-              {/* [TAMBAHAN] EMAIL KONTAK PUBLIK */}
               {registerType === 'mahasiswa' && (
                 <div className="animate-in fade-in duration-300">
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Email Kontak (Publik)</label>
@@ -249,7 +234,7 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
                     type="email"
                     value={emailKontak}
                     onChange={(e) => setEmailKontak(e.target.value)}
-                    required={registerType === 'mahasiswa'} // Wajib Diisi
+                    required={registerType === 'mahasiswa'}
                     placeholder="email.pribadi@gmail.com"
                     className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
                   />
@@ -280,7 +265,6 @@ if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteb
                 />
               </div>
 
-              {/* [TAMBAHAN] WHATSAPP */}
               {registerType === 'mahasiswa' && (
                 <div className="col-span-2 animate-in fade-in duration-300">
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Nomor WhatsApp (Opsional)</label>
