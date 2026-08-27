@@ -19,8 +19,11 @@ const User = db.define("users", {
     website: { type: DataTypes.STRING(255), allowNull: true },
     no_wa: { type: DataTypes.STRING(20), allowNull: true },
 
-    // TAMBAH: Kolom avatar untuk menyimpan nama file foto profil
-    avatar: { type: DataTypes.STRING(255), allowNull: true }
+    // Kolom avatar untuk menyimpan nama file foto profil
+    avatar: { type: DataTypes.STRING(255), allowNull: true },
+
+    // 👇 TAMBAHAN: Kolom email kontak untuk tombol "Hubungi Mahasiswa"
+    email_kontak: { type: DataTypes.STRING(255), allowNull: true }
 }, {
     freezeTableName: true,
     timestamps: true,
