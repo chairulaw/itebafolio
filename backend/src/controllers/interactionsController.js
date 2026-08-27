@@ -42,6 +42,23 @@ export const getComments = async (req, res) => {
     }
 };
 
+export const getCommentsByUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const comments = await Comment.findAll({
+            where: { user_id: id },
+            include: [{
+                model: Project,
+                attributes: ['id', 'judul']
+            }],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).json(comments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // [MAHASISWA/ADMIN] POST: Tambah Komentar Baru
 export const createComment = async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import express from "express";
 import { getProjects, getProjectById, createProject, updateProject, deleteProject, getUserGivenLikes } from "../controllers/projectController.js";
-import { toggleLike, getComments, createComment } from "../controllers/interactionsController.js";
+import { toggleLike, getComments,  createComment, getCommentsByUser } from "../controllers/interactionsController.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import { uploadProjectFiles } from "../middleware/uploadMiddleware.js";
 
@@ -26,6 +26,8 @@ router.post("/:id/like", verifyToken, toggleLike);
 
 // Ambil Komentar (Publik bisa baca)
 router.get("/:id/comments", getComments);
+
+router.get('/comments/user/:id', getCommentsByUser);
 
 // Tambah Komentar (Hanya user login)
 router.post("/:id/comments", verifyToken, createComment);
