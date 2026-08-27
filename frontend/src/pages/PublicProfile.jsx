@@ -122,20 +122,23 @@ export default function PublicProfile() {
               {profileData.bio || "Pengguna ini belum menambahkan deskripsi diri."}
             </p>
 
-            {(profileData.website || profileData.email_kontak) && (
+            {/* --- PEMBUNGKUS TOMBOL KONTAK & WEBSITE --- */}
+            {(profileData.website || profileData.email_kontak || profileData.no_wa) && (
               <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-5">
+                
+                {/* 1. Tombol Tautan Eksternal (Abu-abu netral) */}
                 {profileData.website && (
                   <a 
                     href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-bold transition-all ${isPengunjung ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-blue-50 text-[#2C71B8] hover:bg-blue-100'}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all"
                   >
                     <LinkIcon size={14} /> Tautan Eksternal
                   </a>
                 )}
 
-                {/* TOMBOL DIKEMBALIKAN KE MAILTO */}
+                {/* 2. Tombol Hubungi Mahasiswa / Email (Biru ITEBAFolio) */}
                 {profileData.email_kontak && (
                   <a
                     href={`mailto:${profileData.email_kontak}?subject=Halo! Saya tertarik dengan karya Anda di ITEBAFolio`}
@@ -145,17 +148,18 @@ export default function PublicProfile() {
                   </a>
                 )}
 
+                {/* 3. Tombol WhatsApp (Hijau) */}
                 {profileData.no_wa && (
-  <a
-    // Mengubah awalan '0' menjadi '62' otomatis agar link wa.me berfungsi
-    href={`https://wa.me/${profileData.no_wa.startsWith('0') ? '62' + profileData.no_wa.slice(1) : profileData.no_wa}?text=Halo%20${profileData.nama_user},%20saya%20melihat%20portofolio%20Anda%20di%20ITEBAFolio.%20Bisa%20kita%20berdiskusi?`}
-    target="_blank"
-    rel="noreferrer"
-    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-green-500/30 hover:-translate-y-0.5"
-  >
-    <MessageCircle size={14} /> WhatsApp
-  </a>
-)}
+                  <a
+                    href={`https://wa.me/${profileData.no_wa.startsWith('0') ? '62' + profileData.no_wa.slice(1) : profileData.no_wa}?text=Halo%20${profileData.nama_user},%20saya%20melihat%20portofolio%20Anda%20di%20ITEBAFolio.%20Bisa%20kita%20berdiskusi?`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#25D366]/30 hover:-translate-y-0.5"
+                  >
+                    <MessageCircle size={14} /> WhatsApp
+                  </a>
+                )}
+
               </div>
             )}
           </div>
