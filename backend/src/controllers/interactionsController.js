@@ -48,10 +48,10 @@ export const getCommentsByUser = async (req, res) => {
         const comments = await Comment.findAll({
             where: { user_id: id },
             include: [{
-                model: Project,
-                attributes: ['id', 'judul']
+                model: Project
+                // Baris 'attributes: ['id', 'judul']' KITA HAPUS 
+                // agar sistem otomatis mengambil semua data Project yang valid
             }],
-            // PERBAIKAN: Ubah createdAt menjadi created_at
             order: [['created_at', 'DESC']] 
         });
         res.status(200).json(comments);
