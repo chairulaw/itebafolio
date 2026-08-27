@@ -51,7 +51,8 @@ export const getCommentsByUser = async (req, res) => {
                 model: Project,
                 attributes: ['id', 'judul']
             }],
-            order: [['createdAt', 'DESC']]
+            // PERBAIKAN: Ubah createdAt menjadi created_at
+            order: [['created_at', 'DESC']] 
         });
         res.status(200).json(comments);
     } catch (error) {
