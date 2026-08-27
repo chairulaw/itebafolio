@@ -45,13 +45,15 @@ export default function Register() {
       return toast.error("Password dan Konfirmasi Password tidak cocok!");
     }
 
-    if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@iteba.ac.id')) {
-      return toast.error("Pengunjung umum tidak dapat menggunakan email kampus (@iteba.ac.id).");
-    }
+    // Validasi Email Pengunjung 
+if (registerType === 'pengunjung' && email.toLowerCase().endsWith('@student.iteba.ac.id')) {
+    return toast.error("Pengunjung umum tidak dapat menggunakan email kampus (@student.iteba.ac.id).");
+}
 
-    if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@iteba.ac.id')) {
-      return toast.error("Mahasiswa ITEBA wajib menggunakan email kampus (@iteba.ac.id).");
-    }
+// Validasi Email Mahasiswa
+if (registerType === 'mahasiswa' && !email.toLowerCase().endsWith('@student.iteba.ac.id')) {
+    return toast.error("Mahasiswa ITEBA wajib menggunakan email kampus (@student.iteba.ac.id).");
+}
 
     setIsLoading(true);
     try {
@@ -234,7 +236,7 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder={registerType === 'mahasiswa' ? "email@iteba.ac.id" : "email@gmail.com"}
+                  placeholder={registerType === 'mahasiswa' ? "email@student.iteba.ac.id" : "email@gmail.com"}
                   className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
                 />
               </div>
