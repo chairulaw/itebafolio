@@ -49,10 +49,21 @@ export const updateUser = async (req, res) => {
             return res.status(403).json({ message: "Akses ditolak" });
         }
 
-        const { nama_user, nim, prodi, angkatan, bio, website, no_wa } = req.body;
+        // 1. TAMBAHKAN email_kontak DI SINI
+        const { nama_user, nim, prodi, angkatan, bio, website, no_wa, email_kontak } = req.body;
 
-        // Siapkan data yang akan diupdate
-        const updateData = { nama_user, nim, prodi, angkatan, bio, website, no_wa };
+        // 2. MASUKKAN KE DALAM PAYLOAD UPDATE
+        const updateData = { 
+            nama_user, 
+            nim, 
+            prodi, 
+            angkatan, 
+            bio, 
+            website, 
+            no_wa,
+            // Jika string kosong (""), ubah menjadi null agar rapi di database
+            email_kontak: email_kontak || null 
+        };
 
         // Jika ada file gambar yang diunggah, masukkan nama filenya
         if (req.file) {

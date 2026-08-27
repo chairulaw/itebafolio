@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  User, Lock, LogOut, Camera, Globe, Phone, Briefcase, GraduationCap, ChevronRight, X, Check
+  User, Lock, LogOut, Camera, Globe, Phone, Briefcase, GraduationCap, ChevronRight, X, Check, Mail // Tambah import Mail
 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import toast from 'react-hot-toast';
@@ -46,7 +46,15 @@ async function getCroppedImg(imageSrc, pixelCrop) {
 
 export default function EditProfile() {
   const [formData, setFormData] = useState({
-    nama_user: '', nim: '', prodi: '', angkatan: '', bio: '', website: '', no_wa: '', avatar: ''
+    nama_user: '', 
+    nim: '', 
+    prodi: '', 
+    angkatan: '', 
+    bio: '', 
+    website: '', 
+    no_wa: '', 
+    avatar: '',
+    email_kontak: '' 
   });
   const [userRole, setUserRole] = useState(null);
 
@@ -79,7 +87,8 @@ export default function EditProfile() {
           bio: response.data.bio || '',
           website: response.data.website || '',
           no_wa: response.data.no_wa || '',
-          avatar: response.data.avatar || ''
+          avatar: response.data.avatar || '',
+          email_kontak: response.data.email_kontak || '' 
         });
       } catch (error) {
         console.error("Gagal memuat profil:", error);
@@ -138,6 +147,7 @@ export default function EditProfile() {
       submitData.append('bio', formData.bio);
       submitData.append('website', formData.website);
       submitData.append('no_wa', formData.no_wa);
+      submitData.append('email_kontak', formData.email_kontak); // <-- TAMBAHAN API
 
       if (croppedBlob) {
         submitData.append('avatar', croppedBlob, 'avatar.jpg');
@@ -164,11 +174,9 @@ export default function EditProfile() {
     <>
       <div className="min-h-screen bg-[#FBFBFB] flex flex-col pb-20">
         
-        {/* Main Container diperlebar ke max-w-6xl */}
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-6 pt-8 md:pt-10">
           <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-10">
             
-            {/* Header Form */}
             <div className="border-b border-gray-50 pb-4 mb-8">
               <h2 className="text-2xl font-title font-black text-gray-900 tracking-tight">Edit Profil</h2>
               <p className="text-sm text-gray-400 font-medium">Atur informasi publik dan identitas Anda</p>
@@ -176,10 +184,8 @@ export default function EditProfile() {
 
             <form className="grid grid-cols-1 lg:grid-cols-12 gap-10" onSubmit={handleSubmit}>
               
-              {/* KOLOM KIRI (4 dari 12 bagian): Khusus Avatar dan Bio */}
               <div className="lg:col-span-4 space-y-8">
                 
-                {/* Section Avatar */}
                 <div className="flex flex-col items-center bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
                   <input
                     type="file"
@@ -207,7 +213,6 @@ export default function EditProfile() {
                   </p>
                 </div>
 
-                {/* Section Bio Singkat */}
                 <div className="space-y-4">
                   <SectionTitle icon={<User size={16} />} title="Tentang Dirimu" />
                   <div>
@@ -224,10 +229,8 @@ export default function EditProfile() {
 
               </div>
 
-              {/* KOLOM KANAN (8 dari 12 bagian): Form Data Lengkap */}
               <div className="lg:col-span-8 space-y-8">
                 
-                {/* Informasi Dasar */}
                 <div className="space-y-4">
                   <SectionTitle icon={<User size={16} />} title="Informasi Dasar" />
                   <div className="grid grid-cols-1 gap-6">
@@ -235,7 +238,6 @@ export default function EditProfile() {
                   </div>
                 </div>
 
-                {/* Informasi Akademik (Disembunyikan jika Pengunjung) */}
                 {userRole !== 3 && (
                   <div className="space-y-4 pt-4">
                     <SectionTitle icon={<GraduationCap size={16} />} title="Informasi Akademik" />
@@ -268,18 +270,32 @@ export default function EditProfile() {
                   </div>
                 )}
 
-                {/* Kontak & Media */}
                 <div className="space-y-4 pt-4">
                   <SectionTitle icon={<Globe size={16} />} title="Kontak & Media Sosial" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <InputGroup name="website" value={formData.website} onChange={handleChange} label="Website / Portfolio" placeholder="www.websiteanda.com" icon={<Globe size={14} />} />
                     <InputGroup name="no_wa" value={formData.no_wa} onChange={handleChange} label="Nomor WhatsApp" placeholder="08123456789" icon={<Phone size={14} />} type="number" />
+                    
+                    {/* <-- TAMBAHAN UI EMAIL KONTAK --> */}
+                    <div className="sm:col-span-2">
+                      <InputGroup 
+                        name="email_kontak" 
+                        value={formData.email_kontak} 
+                        onChange={handleChange} 
+                        label="Email Kontak Publik (Opsional)" 
+                        placeholder="email.pribadi@gmail.com" 
+                        type="email" 
+                        icon={<Mail size={14} />} 
+                      />
+                      <p className="text-[10.5px] text-gray-400 mt-1.5 ml-1">
+                        Berbeda dengan email kampus. Email ini akan tampil di profil publik Anda agar pengunjung dapat menghubungi Anda.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
               </div>
 
-              {/* AREA TOMBOL AKSI (Full Width Bawah) */}
               <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-end gap-4 pt-8 border-t border-gray-100 mt-2">
                 <button 
                   type="button" 
@@ -302,7 +318,6 @@ export default function EditProfile() {
         </main>
       </div>
 
-      {/* MODAL CROPPER OVERLAY */}
       {isCropping && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl flex flex-col">
@@ -356,7 +371,6 @@ export default function EditProfile() {
   );
 }
 
-// Sub-komponen
 function SectionTitle({ icon, title }) {
   return (
     <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
@@ -366,7 +380,6 @@ function SectionTitle({ icon, title }) {
   );
 }
 
-// Komponen InputGroup
 function InputGroup({ label, placeholder, type = "text", icon = null, name, value, onChange, disabled = false }) {
   return (
     <div className="relative group">
