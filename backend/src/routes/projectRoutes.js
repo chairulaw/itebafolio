@@ -25,14 +25,13 @@ router.delete("/:id", verifyToken, deleteProject);
 router.post("/:id/like", verifyToken, toggleLike);
 
 // Ambil Komentar (Publik bisa baca)
-router.get('/comments/user/:id', getCommentsByUser);
 router.get("/:id/comments", getComments);
-
 
 // Tambah Komentar (Hanya user login)
 router.post("/:id/comments", verifyToken, createComment);
 
 // Hitung jumlah like yang diberikan oleh user tertentu
+router.get('/comments/user/:id', getCommentsByUser);
 router.get("/users/:userId/likes", getUserGivenLikes);
 
 export default router;
