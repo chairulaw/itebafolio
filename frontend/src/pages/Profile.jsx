@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Link as LinkIcon, Plus,
   Heart, Award, Sparkles, TrendingUp, Crown, Rocket, Zap,
-  Eye, Layers, Star, ArrowUpRight, Share2, BarChart3, Users, Flame
+  Eye, Layers, Star, ArrowUpRight, Share2, BarChart3, Users, Flame, Heart, MessageCircle, ExternalLink, Clock
 } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import api from '../utils/api';
@@ -55,13 +55,12 @@ export default function Profile() {
   const [profileData, setProfileData] = useState(null);
   const [myProjects, setMyProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // --- STATE BARU: Menyimpan jumlah like yang diberikan pengunjung ---
-  const [totalGivenLikes, setTotalGivenLikes] = useState(0);
+ const [totalGivenLikes, setTotalGivenLikes] = useState(0);
+const [commentedProjects, setCommentedProjects] = useState([]);
   
   const navigate = useNavigate();
 
-  useEffect(() => {
+useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const userData = JSON.parse(localStorage.getItem('user'));
@@ -76,22 +75,24 @@ export default function Profile() {
           const projectRes = await api.get(`/projects?user_id=${userData.id}`);
           setMyProjects(projectRes.data);
         } else {
-          // --- PENGUNJUNG: Hitung riwayat apresiasi (Like) ---
+          // --- PENGUNJUNG: Hitung riwayat apresiasi (Like) & Riwayat Komentar ---
           try {
-            // Kita panggil semua project yang ada di Explore
+            // 1. Ambil data Like
             const allProjectsRes = await api.get('/projects');
-            
-            // Kita hitung berapa banyak karya yang pernah di-like oleh Pengunjung ini
             const likedProjectsCount = allProjectsRes.data.filter(project => {
-              // Menyesuaikan format dari Sequelize (bisa "Likes" huruf besar atau "likes" huruf kecil)
               const projectLikes = project.Likes || project.likes || [];
-              return projectLikes.some(like => like.user_id === userData.id);
+              return projectLikes.some(like => Number(like.user_id) === Number(userData.id));
             }).length;
-
             setTotalGivenLikes(likedProjectsCount);
+
+            // 2. Ambil data Riwayat Komentar (Panggilan API Baru)
+            const commentsRes = await api.get(`/comments/user/${userData.id}`);
+            setCommentedProjects(commentsRes.data);
+
           } catch (error) {
-            console.error("Gagal menghitung jejak apresiasi:", error);
+            console.error("Gagal menghitung jejak apresiasi pengunjung:", error);
             setTotalGivenLikes(0);
+            setCommentedProjects([]);
           }
         }
       } catch (error) {
@@ -100,9 +101,9 @@ export default function Profile() {
         setIsLoading(false);
       }
     };
+    
     fetchProfileData();
   }, [navigate]);
-
   /* ── Loading ── */
   if (isLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center">
@@ -296,124 +297,96 @@ export default function Profile() {
           </section>
         )}
 
-        {/* ══════════════════════════════════════════════════════
-            PENGUNJUNG — PREMIUM BENTO DASHBOARD
-        ══════════════════════════════════════════════════════ */}
-        {isPengunjung && (
-          <section>
-            <div className="mb-7">
-              <span className="text-[10px] font-black tracking-[0.18em] text-emerald-600 uppercase bg-emerald-50 border border-emerald-200 inline-block px-3 py-1 rounded-full mb-2">
-                Pengunjung
-              </span>
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                Kolektor Mahakarya
-              </h2>
+{/* ══════════════════════════════════════════════════════
+    PENGUNJUNG — PREMIUM BENTO DASHBOARD (HISTORY MODE)
+══════════════════════════════════════════════════════ */}
+{isPengunjung && (
+  <section>
+    <div className="mb-7">
+      <span className="text-[10px] font-black tracking-[0.18em] text-emerald-600 uppercase bg-emerald-50 border border-emerald-200 inline-block px-3 py-1 rounded-full mb-2">
+        Aktivitas Pengunjung
+      </span>
+      <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+        Jejak Apresiasi Anda
+      </h2>
+    </div>
+
+    {/* Bento Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+
+      {/* CARD 1 — TOTAL LIKES (Kiri) */}
+      <div className="md:col-span-4 relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#060D1F] to-slate-900 border border-slate-800 shadow-xl shadow-slate-900/20 p-8 flex flex-col justify-center min-h-[280px] group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-500/20 via-pink-500/10 to-transparent rounded-full blur-3xl pointer-events-none transition-all duration-500 group-hover:from-rose-500/30" />
+        
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+            <Heart size={32} className="text-rose-500 fill-rose-500/20" />
+          </div>
+          <h3 className="text-6xl font-black text-white tracking-tighter mb-2">
+            {totalGivenLikes || 0}
+          </h3>
+          <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest">
+            Karya Disukai
+          </p>
+        </div>
+      </div>
+
+      {/* CARD 2 — RIWAYAT KOMENTAR (Kanan) */}
+      <div className="md:col-span-8 relative rounded-[2rem] bg-white border border-slate-200 shadow-sm p-8 flex flex-col h-[280px]">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center">
+              <MessageCircle size={18} className="text-[#2C71B8]" />
             </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">Riwayat Komentar</h3>
+              <p className="text-[12px] text-slate-500 font-medium">Portofolio yang Anda tanggapi</p>
+            </div>
+          </div>
+          <span className="bg-slate-100 text-slate-600 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200">
+            {/* Ganti dengan panjang array komentar Anda */ commentedProjects?.length || 0} Komentar
+          </span>
+        </div>
 
-            {/* Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-              {/* Card 1 — Hero CTA */}
-              <div className="md:col-span-7 relative rounded-2xl overflow-hidden bg-[#060D1F] border border-slate-800 shadow-xl shadow-slate-900/20 p-8 group min-h-[220px] flex flex-col justify-between">
-                {/* Glow */}
-                <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-emerald-500/15 via-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-                {/* Grid lines (decorative) */}
-                <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
-                  style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
-
-                <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-5">
-                    <Rocket size={18} className="text-emerald-400" />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight mb-2">
-                    Jelajahi Inovasi <span className="text-emerald-300">Tanpa Batas.</span>
-                  </h3>
-                  <p className="text-slate-400 text-[13px] font-medium leading-relaxed max-w-sm">
-                    Akses karya terbaik, desain UI/UX, dan aplikasi inovatif dari talenta ITEBA.
+        {/* Daftar Komentar Scrollable */}
+        <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+          {commentedProjects && commentedProjects.length > 0 ? (
+            commentedProjects.map((item, index) => (
+              <div key={index} className="group flex items-start gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md hover:border-slate-200 transition-all duration-300">
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-[#2C71B8] transition-colors">
+                    {item.Project?.judul || "Judul Portofolio"}
+                  </h4>
+                  <p className="text-[13px] text-slate-600 line-clamp-2 leading-relaxed">
+                    "{item.komentar}"
                   </p>
-                </div>
-
-                <div className="relative z-10 mt-6">
-                  <Link
-                    to="/"
-                    className="group/btn inline-flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:scale-[1.03] active:scale-95 transition-all shadow"
-                  >
-                    Mulai Eksplorasi
-                    <TrendingUp size={15} className="group-hover/btn:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Card 2 — Apresiasi */}
-              <div className="md:col-span-5 relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 border border-emerald-400/50 shadow-lg p-8 flex flex-col justify-between min-h-[200px]">
-                <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
-                  <Heart size={130} className="fill-white" />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-10 h-10 bg-white/20 border border-white/30 backdrop-blur rounded-xl flex items-center justify-center mb-5">
-                    <Heart size={17} className="fill-white text-white" />
+                  <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-slate-400">
+                    <Clock size={12} />
+                    {new Date(item.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </div>
-                  <h3 className="text-xl font-black text-white mb-2 tracking-tight">Kekuatan Apresiasi</h3>
-                  <p className="text-emerald-50 text-[13px] font-medium leading-relaxed opacity-90">
-                    Satu <em>Like</em> dari Anda adalah motivasi besar bagi mahasiswa untuk terus berkarya.
-                  </p>
                 </div>
-              </div>
-
-              {/* Card 3 — Trending */}
-              <div className="md:col-span-4 relative rounded-2xl overflow-hidden bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-6 group min-h-[160px] flex flex-col justify-between">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-rose-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
-                <div className="relative z-10">
-                  <div className="w-9 h-9 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center mb-4">
-                    <Flame size={16} className="text-orange-500" />
-                  </div>
-                  <h3 className="text-base font-black text-slate-900 mb-1">Trending Sekarang</h3>
-                  <p className="text-[12px] text-slate-500 font-medium">Karya paling banyak dilihat minggu ini.</p>
-                </div>
-                <Link to="/" className="relative z-10 mt-4 text-[12px] font-bold text-orange-500 hover:text-orange-600 inline-flex items-center gap-1 transition-colors">
-                  Lihat Semua <ArrowUpRight size={12} />
+                <Link 
+                  to={`/project/${item.project_id}`} 
+                  className="shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#2C71B8] hover:border-[#2C71B8] hover:bg-blue-50 transition-all"
+                  title="Lihat Portofolio"
+                >
+                  <ExternalLink size={14} />
                 </Link>
               </div>
-
-              {/* Card 4 — Jejak Apresiasi (Dinamis) */}
-              <div className="md:col-span-4 relative rounded-2xl overflow-hidden bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-6 group min-h-[160px] flex flex-col justify-between">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
-                <div className="relative z-10">
-                  <div className="w-9 h-9 bg-violet-50 border border-violet-100 rounded-xl flex items-center justify-center mb-4">
-                    <Heart size={16} className="text-violet-500" />
-                  </div>
-                  <h3 className="text-base font-black text-slate-900 mb-1">Jejak Apresiasi</h3>
-                  <p className="text-[12px] text-slate-500 font-medium">Jumlah dukungan yang telah Anda berikan untuk kreator ITEBA.</p>
-                </div>
-                <div className="relative z-10 mt-4 flex items-center gap-2">
-                  {/* --- MENAMPILKAN ANGKA TOTAL LIKE DINAMIS --- */}
-                  <span className="text-xl font-black text-violet-600">{totalGivenLikes}</span>
-                  <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Karya Disukai</span>
-                </div>
-              </div>
-
-              {/* Card 5 — Exclusive Access */}
-              <div className="md:col-span-4 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0B1120] to-slate-900 border border-slate-700 shadow-lg hover:-translate-y-1 transition-all duration-300 p-6 group min-h-[160px] flex flex-col justify-between">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/20 to-transparent blur-2xl pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="w-9 h-9 bg-white/10 border border-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-4">
-                    <BarChart3 size={16} className="text-blue-400" />
-                  </div>
-                  <h3 className="text-base font-black text-white mb-1">Exclusive Access</h3>
-                  <p className="text-[12px] text-slate-400 font-medium">Akses penuh ke seluruh portofolio digital kampus.</p>
-                </div>
-                <div className="relative z-10 mt-4">
-                  <span className="inline-flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full text-[11px] font-bold">
-                   Pengunjung
-                  </span>
-                </div>
-              </div>
-
+            ))
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+              <MessageCircle size={32} className="text-slate-300 mb-3" />
+              <p className="text-sm font-semibold text-slate-500">Belum ada jejak diskusi.</p>
+              <p className="text-[12px] text-slate-400">Komentar Anda pada karya mahasiswa akan muncul di sini.</p>
             </div>
-          </section>
-        )}
+          )}
+        </div>
+      </div>
+
+    </div>
+  </section>
+)}
 
       </main>
     </div>
