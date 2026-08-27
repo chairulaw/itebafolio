@@ -122,46 +122,46 @@ export default function PublicProfile() {
               {profileData.bio || "Pengguna ini belum menambahkan deskripsi diri."}
             </p>
 
-            {/* --- PEMBUNGKUS TOMBOL KONTAK & WEBSITE --- */}
-            {(profileData.website || profileData.email_kontak || profileData.no_wa) && (
-              <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-5">
-                
-                {/* 1. Tombol Tautan Eksternal (Abu-abu netral) */}
-                {profileData.website && (
-                  <a 
-                    href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all"
-                  >
-                    <LinkIcon size={14} /> Tautan Eksternal
-                  </a>
-                )}
+{/* --- PEMBUNGKUS TOMBOL KONTAK & WEBSITE --- */}
+{(profileData.website || profileData.email_kontak || profileData.no_wa) && (
+  <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-5">
+    
+    {/* 1. Tombol Tautan Eksternal (Abu-abu netral) */}
+    {profileData.website && (
+      <a 
+        href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} 
+        target="_blank" 
+        rel="noreferrer" 
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all"
+      >
+        <LinkIcon size={14} /> Tautan Eksternal
+      </a>
+    )}
 
-                {/* 2. Tombol Hubungi Mahasiswa / Email (Biru ITEBAFolio) */}
-                {profileData.email_kontak && (
-                  <a
-                    href={`mailto:${profileData.email_kontak}?subject=Halo! Saya tertarik dengan karya Anda di ITEBAFolio`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2C71B8] hover:bg-[#235a93] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#2C71B8]/30 hover:-translate-y-0.5"
-                  >
-                    <Mail size={14} /> Hubungi Mahasiswa
-                  </a>
-                )}
+    {/* 2. Tombol Hubungi Mahasiswa / Email (Biru ITEBAFolio) */}
+    {profileData.email_kontak && (
+      <a
+        href={`mailto:${profileData.email_kontak}?subject=Halo! Saya tertarik dengan karya Anda di ITEBAFolio`}
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2C71B8] hover:bg-[#235a93] !text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#2C71B8]/30 hover:-translate-y-0.5"
+      >
+        <Mail size={14} className="!text-white" /> Hubungi Mahasiswa
+      </a>
+    )}
 
-                {/* 3. Tombol WhatsApp (Hijau) */}
-                {profileData.no_wa && (
-                  <a
-                    href={`https://wa.me/${profileData.no_wa.startsWith('0') ? '62' + profileData.no_wa.slice(1) : profileData.no_wa}?text=Halo%20${profileData.nama_user},%20saya%20melihat%20portofolio%20Anda%20di%20ITEBAFolio.%20Bisa%20kita%20berdiskusi?`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#25D366]/30 hover:-translate-y-0.5"
-                  >
-                    <MessageCircle size={14} /> WhatsApp
-                  </a>
-                )}
+    {/* 3. Tombol WhatsApp (Hijau) */}
+    {profileData.no_wa && (
+      <a
+        href={`https://wa.me/${profileData.no_wa.startsWith('0') ? '62' + profileData.no_wa.slice(1) : profileData.no_wa}?text=Halo%20${profileData.nama_user},%20saya%20melihat%20portofolio%20Anda%20di%20ITEBAFolio.%20Bisa%20kita%20berdiskusi?`}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] !text-white font-bold rounded-lg text-[12px] transition-all shadow-sm shadow-[#25D366]/30 hover:-translate-y-0.5"
+      >
+        <MessageCircle size={14} className="!text-white" /> WhatsApp
+      </a>
+    )}
 
-              </div>
-            )}
+  </div>
+)}
           </div>
         </div>
 
