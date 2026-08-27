@@ -454,9 +454,9 @@ export default function ProjectDetail() {
                   <Lock size={28} className="text-[var(--cobalt)] mb-3" />
                   <h4 className="text-[17px] font-bold text-gray-900 mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Konten Eksklusif</h4>
                   <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">Masuk ke akun Anda untuk membaca keseluruhan riset, inovasi, dan mengunjungi tautan eksternal.</p>
-                  <Link to="/login" className="bg-[var(--ink)] text-white text-[13px] font-semibold px-6 py-3 rounded-full w-full hover:bg-[var(--cobalt)] transition-colors shadow-md">
-                    Login / Daftar Sekarang
-                  </Link>
+                 <Link to="/login" className="bg-[var(--cobalt)] !text-white text-[14px] font-bold px-6 py-3 rounded-full w-full hover:scale-[1.03] active:scale-95 transition-all duration-300 shadow-md shadow-blue-900/20">
+        Login / Daftar Sekarang
+      </Link>
                 </div>
               </div>
             )}
