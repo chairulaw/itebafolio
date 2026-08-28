@@ -9,12 +9,16 @@ import {
   ArrowUpRight,
   Activity,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Heart,
+  MessageCircle,
+  Check
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Area, AreaChart, LabelList
+  Area, AreaChart, LabelList
 } from 'recharts';
+import toast from 'react-hot-toast';
 import api from "../../utils/api";
 
 // ─── Skeleton Shimmer Component ───────────────────────────────────────────────
@@ -28,11 +32,9 @@ const SkeletonLoader = () => (
   <div className="space-y-8 max-w-7xl mx-auto">
     <style>{`
       @keyframes shimmer { 100% { transform: translateX(100%); } }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      @keyframes blobFloat { 0%,100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
     `}</style>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {[...Array(3)].map((_, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {[...Array(4)].map((_, i) => (
         <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
           <div className="flex items-center gap-4">
             <Shimmer className="w-14 h-14 rounded-2xl" />
@@ -53,21 +55,6 @@ const SkeletonLoader = () => (
             <Shimmer className="h-6 w-20 rounded-full" />
           </div>
           <Shimmer className="h-64 w-full rounded-2xl" />
-        </div>
-      ))}
-    </div>
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-100 space-y-2">
-        <Shimmer className="h-6 w-48 rounded-lg" />
-        <Shimmer className="h-3 w-72 rounded-lg" />
-      </div>
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="px-6 py-4 border-b border-gray-50 flex items-center gap-6">
-          <Shimmer className="h-6 w-16 rounded-md" />
-          <Shimmer className="h-4 w-40 rounded-lg" />
-          <Shimmer className="h-4 w-28 rounded-lg" />
-          <Shimmer className="h-4 flex-1 rounded-lg" />
-          <Shimmer className="h-8 w-24 rounded-lg" />
         </div>
       ))}
     </div>
@@ -92,25 +79,16 @@ const CustomTooltip = ({ active, payload, label, unit = '', labelPrefix = '' }) 
   return null;
 };
 
-// Label angka langsung di ujung bar horizontal
 const BarValueLabel = (props) => {
   const { x, y, width, height, value } = props;
   if (value === undefined || value === null) return null;
   return (
-    <text
-      x={x + width + 8}
-      y={y + height / 2}
-      dy={4}
-      textAnchor="start"
-      className="fill-gray-700 font-bold"
-      style={{ fontSize: 12 }}
-    >
+    <text x={x + width + 8} y={y + height / 2} dy={4} textAnchor="start" className="fill-gray-700 font-bold" style={{ fontSize: 12 }}>
       {Number(value).toLocaleString('id-ID')}
     </text>
   );
 };
 
-// Label angka di atas titik area chart
 const AreaValueLabel = (props) => {
   const { x, y, value } = props;
   if (value === undefined || value === null) return null;
@@ -126,7 +104,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalProjects: 0,
-    pendingViolations: 0
+    pendingViolations: 0,
+    totalInteractions: 0
   });
 
   const [trendData, setTrendData] = useState([]);
@@ -134,67 +113,60 @@ export default function Dashboard() {
   const [violations, setViolations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchAdminData = async () => {
       try {
         const statsRes = await api.get('/admin/dashboard');
-        setStats(statsRes.data.stats);
         setTrendData(statsRes.data.charts.trends);
 
         // ========================================================
-        // [PERBAIKAN UTAMA]: Hitung Distribusi Prodi secara Akurat
+        // KALKULASI DINAMIS: Distribusi Prodi & Total Interaksi
         // ========================================================
-        // Kita ambil data /projects agar bisa mengecek asal Prodi pembuatnya
         const projectsRes = await api.get('/projects');
         const allProjects = projectsRes.data;
 
-        // Siapkan wadah hitungan untuk masing-masing prodi
         const prodiCounts = {
-          'Sistem Informasi': 0,
-          'DKV': 0,
-          'Teknik Komputer': 0,
-          'Matematika': 0
+          'Sistem Informasi': 0, 'DKV': 0, 'Teknik Komputer': 0, 'Matematika': 0
         };
 
-        // Hitung satu per satu
+        let calculatedInteractions = 0;
+
         allProjects.forEach(project => {
+          // Hitung Prodi
           const userProdi = (project.user?.prodi || project.User?.prodi || '').toLowerCase().trim();
-          
           if (userProdi === 'sistem informasi') prodiCounts['Sistem Informasi']++;
           else if (userProdi === 'desain komunikasi visual' || userProdi === 'dkv') prodiCounts['DKV']++;
           else if (userProdi === 'teknik komputer') prodiCounts['Teknik Komputer']++;
           else if (userProdi === 'matematika') prodiCounts['Matematika']++;
+
+          // Hitung Interaksi (Like + Komentar)
+          const likes = project.Likes?.length || project.likes?.length || 0;
+          const comments = project.Comments?.length || project.comments?.length || 0;
+          calculatedInteractions += (likes + comments);
         });
 
-        // Format data agar sesuai dengan yang diminta oleh chart Recharts
         const formattedProdiData = [
           { name: 'Sistem Informasi', total: prodiCounts['Sistem Informasi'] },
           { name: 'DKV', total: prodiCounts['DKV'] },
           { name: 'Teknik Komputer', total: prodiCounts['Teknik Komputer'] },
           { name: 'Matematika', total: prodiCounts['Matematika'] }
-        ].filter(item => item.total > 0); // Hanya tampilkan prodi yang sudah punya karya
+        ].filter(item => item.total > 0); 
 
-        // Masukkan data yang sudah matang ini ke state
         setCategoryData(formattedProdiData);
-        // ========================================================
+        setStats({
+          ...statsRes.data.stats,
+          totalInteractions: calculatedInteractions
+        });
 
+        // ========================================================
+        // FORMAT LOG PELANGGARAN
+        // ========================================================
         const logsRes = await api.get('/admin/violations');
-        
-        // Deteksi cerdas untuk mencari nama Kreator dan Isi Komentar
         const formattedLogs = logsRes.data.data
           .filter(log => log.status !== 'resolved' && log.status !== 'selesai' && log.status !== 'Resolved')
           .map(log => {
-            const authorName = log.User?.nama_user || 
-                               log.user?.nama_user || 
-                               log.Comment?.User?.nama_user || 
-                               log.Comment?.user?.nama_user || 
-                               log.Project?.User?.nama_user || 
-                               log.Project?.user?.nama_user || 
-                               'Nama Tidak Ditemukan';
-            
-            const entityName = log.entitas_nama || 
-                               (log.tipe_entitas?.toUpperCase() === 'PROJECT' ? log.Project?.judul_project : log.Comment?.isi_komentar) || 
-                               `ID: ${log.entitas_id}`;
+            const authorName = log.User?.nama_user || log.user?.nama_user || log.Comment?.User?.nama_user || log.Project?.User?.nama_user || 'Anonim';
+            const entityName = log.entitas_nama || (log.tipe_entitas?.toUpperCase() === 'PROJECT' ? log.Project?.judul_project : log.Comment?.komentar) || `ID: ${log.entitas_id}`;
 
             return {
               id: log.id,
@@ -210,7 +182,7 @@ useEffect(() => {
 
       } catch (error) {
         if (error.response?.status === 403) {
-          alert("Akses ditolak: Area khusus Administrator.");
+          toast.error("Akses ditolak: Area khusus Administrator.");
         } else {
           console.error("Gagal memuat data admin:", error);
         }
@@ -222,20 +194,28 @@ useEffect(() => {
     fetchAdminData();
   }, []);
 
-  const handleDelete = async (id, type) => {
-    if (window.confirm(`Selesaikan kasus pelanggaran ${type} ini? (Data terkait akan dihapus)`)) {
-      try {
-        await api.delete(`/admin/violations/${id}`);
-        setViolations(violations.filter(v => v.id !== id));
-        alert('Kasus berhasil dihapus permanen.');
-      } catch (error) {
+  // FUNGSI AKSI MODERASI: HAPUS vs PULIHKAN
+  const handleModerationAction = async (id, actionType) => {
+    if (actionType === 'delete') {
+      if (window.confirm('Hapus permanen data (Project/Komentar) yang melanggar ini?')) {
+        const loadingId = toast.loading('Menghapus data...');
+        try {
+          await api.delete(`/admin/violations/${id}`);
+          setViolations(violations.filter(v => v.id !== id));
+          toast.success('Data pelanggaran berhasil dihapus permanen.', { id: loadingId });
+        } catch (error) {
+          toast.error('Gagal menghapus data.', { id: loadingId });
+        }
+      }
+    } else if (actionType === 'resolve') {
+      if (window.confirm('Abaikan laporan ini dan pulihkan statusnya?')) {
+        const loadingId = toast.loading('Memulihkan status...');
         try {
           await api.put(`/admin/violations/${id}`, { status: 'resolved' });
           setViolations(violations.filter(v => v.id !== id));
-          alert('Kasus berhasil diselesaikan.');
-        } catch (err2) {
-          alert('Gagal menindaklanjuti pelanggaran.');
-          console.error(err2);
+          toast.success('Laporan diabaikan, data dipulihkan.', { id: loadingId });
+        } catch (error) {
+          toast.error('Gagal memulihkan status.', { id: loadingId });
         }
       }
     }
@@ -255,7 +235,6 @@ useEffect(() => {
 
       {/* Global styles */}
       <style>{`
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blobFloat { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-24px) scale(1.04); } }
         @keyframes pulseGlow { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
@@ -267,67 +246,73 @@ useEffect(() => {
         .row-hover { transition: background 0.15s ease; }
       `}</style>
 
-      {/* ── Decorative ambient blobs ── */}
+      {/* Decorative ambient blobs */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="animate-blob absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-200/25 blur-3xl animate-pulse-glow" style={{ animationDelay: '0s' }} />
         <div className="animate-blob absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-emerald-200/20 blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
         <div className="animate-blob absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-violet-200/15 blur-3xl animate-pulse-glow" style={{ animationDelay: '5s' }} />
       </div>
 
-      {/* ── Main content ── */}
       <div className="relative z-10 space-y-8 max-w-7xl mx-auto p-6 md:p-8">
 
         {/* ── STATS CARDS ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
 
-          {/* Card: Total Pengguna */}
+          {/* Card 1: Total Pengguna */}
           <div className="group card-hover relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-blue-100/60 shadow-sm shadow-blue-100/50 overflow-hidden cursor-default">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative flex items-start justify-between mb-5">
-              <div className="w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                <Users size={24} className="text-white" />
+              <div className="w-[48px] h-[48px] rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                <Users size={22} className="text-white" />
               </div>
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
                 <ArrowUpRight size={10} /> AKTIF
               </span>
             </div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Pengguna</p>
-            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalUsers.toLocaleString('id-ID')}</h3>
-            <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style={{ width: '72%' }} />
-            </div>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Pengguna</p>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tight">{stats.totalUsers.toLocaleString('id-ID')}</h3>
           </div>
 
-          {/* Card: Total Project */}
+          {/* Card 2: Total Project */}
           <div className="group card-hover relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-emerald-100/60 shadow-sm shadow-emerald-100/50 overflow-hidden cursor-default">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative flex items-start justify-between mb-5">
-              <div className="w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                <FolderGit2 size={24} className="text-white" />
+              <div className="w-[48px] h-[48px] rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                <FolderGit2 size={22} className="text-white" />
               </div>
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded-full">
                 <Activity size={10} /> LIVE
               </span>
             </div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Project</p>
-            <h3 className="text-4xl font-black text-gray-900 tracking-tight">{stats.totalProjects.toLocaleString('id-ID')}</h3>
-            <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style={{ width: '58%' }} />
-            </div>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Karya Diunggah</p>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tight">{stats.totalProjects.toLocaleString('id-ID')}</h3>
           </div>
 
-          {/* Card: Kasus Pelanggaran */}
+          {/* Card 3: Total Interaksi (Baru) */}
+          <div className="group card-hover relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-violet-100/60 shadow-sm shadow-violet-100/50 overflow-hidden cursor-default">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex items-start justify-between mb-5">
+              <div className="w-[48px] h-[48px] rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                <Heart size={22} className="text-white fill-white/20" />
+              </div>
+            </div>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Total Interaksi</p>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tight">{stats.totalInteractions.toLocaleString('id-ID')}</h3>
+          </div>
+
+          {/* Card 4: Kasus Pelanggaran */}
           <div className="group card-hover relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-red-100/60 shadow-sm shadow-red-100/50 overflow-hidden cursor-default">
             <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute -right-5 -bottom-5 text-red-100/70 group-hover:scale-110 group-hover:text-red-200/80 transition-all duration-300 pointer-events-none">
-              <AlertOctagon size={96} strokeWidth={1} />
+              <AlertOctagon size={80} strokeWidth={1} />
             </div>
             <div className="relative flex items-start justify-between mb-5">
-              <div className="w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-200">
-                <AlertOctagon size={24} className="text-white" />
+              <div className="w-[48px] h-[48px] rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-200">
+                <AlertOctagon size={22} className="text-white" />
               </div>
               {stats.pendingViolations > 0 && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-full animate-pulse">
@@ -335,12 +320,8 @@ useEffect(() => {
                 </span>
               )}
             </div>
-            <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-1">Kasus Pelanggaran</p>
-            <h3 className="text-4xl font-black text-red-600 tracking-tight">{stats.pendingViolations}</h3>
-            <div className="mt-4 h-1 w-full bg-red-50 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full" style={{ width: `${Math.min((stats.pendingViolations / 20) * 100, 100)}%` }} />
-            </div>
-            <p className="text-[11px] text-red-400 mt-1.5">Menunggu penyelesaian</p>
+            <p className="text-[11px] font-semibold text-red-400 uppercase tracking-widest mb-1">Moderasi Aktif</p>
+            <h3 className="text-3xl font-black text-red-600 tracking-tight">{stats.pendingViolations}</h3>
           </div>
         </div>
 
@@ -397,7 +378,6 @@ useEffect(() => {
                       label={{
                         value: 'Jumlah Project',
                         angle: -90,
-
                         position: 'insideLeft',
                         style: { fontSize: 10, fill: '#94a3b8', fontWeight: 600 },
                         dx: 12
@@ -425,72 +405,69 @@ useEffect(() => {
             )}
           </div>
 
-{/* Chart 2: Distribusi Prodi */}
-<div className="group relative bg-white/80 backdrop-blur-sm p-7 rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-br from-violet-50/25 via-transparent to-transparent pointer-events-none" />
-  <div className="relative flex items-start justify-between mb-2">
-    <div>
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-          <Activity size={14} className="text-violet-500" />
-        </div>
-        <h3 className="text-sm font-bold text-gray-800">Distribusi Program Studi</h3>
-      </div>
-      <p className="text-xs text-gray-400 ml-9">
-        Total {totalCategoryProjects.toLocaleString('id-ID')} project, dikelompokkan per program studi
-      </p>
-    </div>
-    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-violet-300 shrink-0">
-      <Sparkles size={9} /> ALL TIME
-    </span>
-  </div>
+          {/* Chart 2: Distribusi Prodi */}
+          <div className="group relative bg-white/80 backdrop-blur-sm p-7 rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/25 via-transparent to-transparent pointer-events-none" />
+            <div className="relative flex items-start justify-between mb-2">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <Activity size={14} className="text-violet-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800">Distribusi Program Studi</h3>
+                </div>
+                <p className="text-xs text-gray-400 ml-9">
+                  Total {totalCategoryProjects.toLocaleString('id-ID')} project terdata
+                </p>
+              </div>
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-600 text-white text-[10px] font-bold rounded-full shadow-sm shadow-violet-300 shrink-0">
+                <Sparkles size={9} /> ALL TIME
+              </span>
+            </div>
 
-  {categoryData.length === 0 ? (
-    <div className="h-64 w-full flex flex-col items-center justify-center gap-2 text-center">
-      <Activity size={28} className="text-gray-200" />
-      <p className="text-xs text-gray-400">Belum ada data project untuk ditampilkan.</p>
-    </div>
-  ) : (
-    <div className="w-full h-[300px] relative mt-4">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 45, bottom: 0, left: 24 }}>
-          <defs>
-            <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#6d28d9" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-          <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-          
-          {/* PERBAIKAN DI SINI: Mengubah angka ID menjadi Nama Program Studi */}
-<YAxis
-            dataKey="name"
-            type="category"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 11, fill: '#334155', fontWeight: 700 }}
-            width={135}
-          />
-
-          <Tooltip
-            content={<CustomTooltip unit="project" labelPrefix="Prodi " />}
-            cursor={{ fill: '#f8fafc' }}
-          />
-          <Bar dataKey="total" name="Total Project" fill="url(#barGrad)" radius={[0, 8, 8, 0]} barSize={20}>
-            <LabelList dataKey="total" content={<BarValueLabel />} />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )}
-</div>
+            {categoryData.length === 0 ? (
+              <div className="h-64 w-full flex flex-col items-center justify-center gap-2 text-center">
+                <Activity size={28} className="text-gray-200" />
+                <p className="text-xs text-gray-400">Belum ada data project untuk ditampilkan.</p>
+              </div>
+            ) : (
+              <div className="w-full h-[300px] relative mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 45, bottom: 0, left: 24 }}>
+                    <defs>
+                      <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#6d28d9" />
+                        <stop offset="30%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#2dd4bf" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#334155', fontWeight: 700 }}
+                      width={135}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip unit="project" labelPrefix="Prodi " />}
+                      cursor={{ fill: '#f8fafc' }}
+                    />
+                    <Bar dataKey="total" name="Total Project" fill="url(#barGrad)" radius={[0, 8, 8, 0]} barSize={20}>
+                      <LabelList dataKey="total" content={<BarValueLabel />} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── MODERATION TABLE ── */}
         <div className="animate-fade-in-up bg-white/85 backdrop-blur-sm rounded-3xl border border-gray-100/80 shadow-sm overflow-hidden" style={{ animationDelay: '0.25s' }}>
-
-          {/* Table Header */}
+          
           <div className="px-7 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-red-50/50 via-rose-50/20 to-transparent">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-sm shadow-red-200">
@@ -498,7 +475,7 @@ useEffect(() => {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-gray-900">Moderasi Aktif</h3>
-                <p className="text-[11px] text-gray-400 mt-0.5">Deteksi otomatis sistem terhadap konten tidak pantas</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">Tinjau konten yang disensor otomatis oleh sistem</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -515,17 +492,15 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50/90 backdrop-blur-sm border-b border-gray-100">
                   <th className="px-7 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tipe</th>
-                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Nama / Judul</th>
-                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Kreator</th>
+                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Konten / Entitas</th>
+                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Oleh</th>
                   <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Alasan Deteksi</th>
-                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tanggal</th>
-                  <th className="px-7 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">Aksi</th>
+                  <th className="px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center">Aksi (Tindak Lanjut)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -545,7 +520,7 @@ useEffect(() => {
                         {v.type}
                       </span>
                     </td>
-                    <td className="px-4 py-4 font-semibold text-gray-800 max-w-[200px] truncate">{v.name}</td>
+                    <td className="px-4 py-4 font-semibold text-gray-800 max-w-[280px] whitespace-pre-wrap">{v.name}</td>
                     <td className="px-4 py-4">
                       <span className="flex items-center gap-2 text-gray-600">
                         <span className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase shrink-0">
@@ -559,29 +534,37 @@ useEffect(() => {
                         ⚠ {v.reason}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-xs text-gray-400 font-medium">{v.date}</td>
-                    <td className="px-7 py-4 text-right">
-                      <button
-                        onClick={() => handleDelete(v.id, v.type)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-lg hover:shadow-red-200/60 rounded-xl transition-all duration-200 font-semibold text-[11px] group-hover/row:border-red-300"
-                      >
-                        <Trash2 size={12} />
-                        Selesaikan
-                      </button>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleModerationAction(v.id, 'resolve')}
+                          title="Abaikan & Pulihkan"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors font-semibold text-[11px]"
+                        >
+                          <Check size={14} /> Pulihkan
+                        </button>
+                        <button
+                          onClick={() => handleModerationAction(v.id, 'delete')}
+                          title="Hapus Permanen"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white rounded-lg transition-colors font-semibold text-[11px]"
+                        >
+                          <Trash2 size={14} /> Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
 
                 {violations.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-6 py-20 text-center">
+                    <td colSpan="5" className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center">
                           <CheckCircle2 size={32} className="text-emerald-500" />
                         </div>
                         <div>
                           <p className="font-bold text-gray-700 text-sm">Sistem Bersih</p>
-                          <p className="text-gray-400 text-xs mt-1">Tidak ada pelanggaran yang terdeteksi saat ini.</p>
+                          <p className="text-gray-400 text-xs mt-1">Tidak ada pelanggaran yang perlu ditindaklanjuti.</p>
                         </div>
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">● SEMUA AMAN</span>
                       </div>
