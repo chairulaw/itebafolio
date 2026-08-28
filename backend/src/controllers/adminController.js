@@ -21,58 +21,37 @@ export const getAllUsers = async (req, res) => {
 // [PERBAIKAN]: Fungsi Update User yang Kuat & Tahan Banting
 export const updateUser = async (req, res) => {
     try {
-        if (req.user.role_id !== 1) return res.status(403).json({ message: "Akses ditolak." });
+        const { id } = req.params;
+        const { 
+            nama_user, email, password, role_id, 
+            nim, prodi, angkatan, bio, no_wa, website, email_kontak 
+        } = req.body;
 
-        // 1. [PERBAIKAN] Tambahkan 'password' pada destructuring req.body
-        const { nama_user, email, nim, prodi, role_id, angkatan, bio, website, no_wa, password } = req.body;
-        const user = await User.findByPk(req.params.id);
+        const user = await User.findByPk(id);
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
-        if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+        // Update semua field sesuai payload dari frontend
+        user.nama_user = nama_user;
+        user.email = email;
+        user.role_id = role_id;
+        user.nim = nim;
+        user.prodi = prodi;
+        user.angkatan = angkatan;
+        user.bio = bio;
+        user.no_wa = no_wa;
+        user.website = website;
+        user.email_kontak = email_kontak;
 
-        // Tentukan Target Role
-        const targetRoleId = role_id !== undefined ? Number(role_id) : user.role_id;
-        const isPengunjung = targetRoleId === 3;
-
-        // 1. Validasi Email ITEBA (Hanya untuk Admin & Mahasiswa)
-        if (!isPengunjung && email && !email.endsWith('@iteba.ac.id')) {
-            return res.status(400).json({ message: "Mahasiswa dan Admin wajib menggunakan email @iteba.ac.id" });
-        }
-
-        // 2. Proteksi Super Admin (Opsional jika ID 1 adalah super admin)
-        if (Number(user.id) === 1 && targetRoleId !== 1) {
-            return res.status(400).json({ message: "Super Admin absolut tidak boleh diubah role-nya!" });
-        }
-
-        // 3. [PERBAIKAN] Siapkan objek data yang akan diupdate
-        let updateData = {
-            nama_user: nama_user !== undefined ? nama_user : user.nama_user,
-            email: email !== undefined ? email : user.email,
-            role_id: targetRoleId,
-            
-            // Logika Pembersihan: Jika dia Pengunjung, paksa data akademik jadi null.
-            // Jika bukan pengunjung tapi form dikirim kosong "", jadikan null agar tidak error 500.
-            nim: isPengunjung ? null : (nim === "" ? null : nim),
-            prodi: isPengunjung ? null : (prodi === "" ? null : prodi),
-            angkatan: isPengunjung ? null : (angkatan === "" ? null : angkatan),
-            
-            bio: bio === "" ? null : (bio !== undefined ? bio : user.bio),
-            website: isPengunjung ? null : (website === "" ? null : website),
-            no_wa: no_wa === "" ? null : (no_wa !== undefined ? no_wa : user.no_wa)
-        };
-
-        // 4. [PERBAIKAN] Logika Hashing Password (Hanya dieksekusi jika password diisi)
+        // Update password hanya jika admin mengisinya
         if (password && password.trim() !== "") {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            updateData.password = hashedPassword;
+            const bcrypt = await import('bcrypt');
+            user.password = await bcrypt.hash(password, 10);
         }
 
-        // 5. Update Database
-        await user.update(updateData);
-
-        res.status(200).json({ success: true, message: "Data pengguna berhasil diperbarui!" });
+        await user.save();
+        res.status(200).json({ message: "Data pengguna berhasil diperbarui" });
     } catch (error) {
-        console.error("Error saat update user:", error); // Muncul di PM2 logs
-        res.status(500).json({ success: false, message: "Terjadi kesalahan server: " + error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 

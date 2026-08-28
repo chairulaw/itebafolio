@@ -102,18 +102,21 @@ export default function ManageUsers() {
     e.preventDefault();
 
     const emailLower = selectedUser.email.toLowerCase();
-    const isCivitasRole = selectedUser.role === 'Admin' || selectedUser.role === 'Mahasiswa';
     
-    // --- VALIDASI AKUN ---
-    if (isCivitasRole && !emailLower.endsWith('@student.iteba.ac.id')) {
-      return toast.error("Mahasiswa wajib menggunakan email dengan domain @student.iteba.ac.id!");
+    // --- VALIDASI EMAIL AKURAT BERDASARKAN ROLE ---
+    if (selectedUser.role === 'Mahasiswa' && !emailLower.endsWith('@student.iteba.ac.id')) {
+      return toast.error("Mahasiswa wajib menggunakan domain @student.iteba.ac.id!");
+    }
+    
+    if (selectedUser.role === 'Admin' && !emailLower.endsWith('@iteba.ac.id')) {
+      return toast.error("Admin wajib menggunakan domain @iteba.ac.id!");
     }
 
-    if (selectedUser.role === 'Pengunjung' && emailLower.endsWith('@student.iteba.ac.id')) {
+    if (selectedUser.role === 'Pengunjung' && emailLower.includes('@iteba.ac.id')) {
       return toast.error("Pengunjung umum tidak diizinkan menggunakan email kampus!");
     }
 
-    if (isCivitasRole && !selectedUser.email_kontak) {
+    if (selectedUser.role === 'Mahasiswa' && !selectedUser.email_kontak) {
       return toast.error("Email Kontak (Publik) wajib diisi untuk Mahasiswa!");
     }
 
