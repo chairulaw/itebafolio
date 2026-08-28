@@ -30,27 +30,29 @@ export const updateUser = async (req, res) => {
         const user = await User.findByPk(id);
         if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
-        // Update semua field sesuai payload dari frontend
-        user.nama_user = nama_user;
-        user.email = email;
-        user.role_id = role_id;
-        user.nim = nim;
-        user.prodi = prodi;
-        user.angkatan = angkatan;
-        user.bio = bio;
-        user.no_wa = no_wa;
-        user.website = website;
-        user.email_kontak = email_kontak;
+        // Update data utama
+        user.nama_user = nama_user || user.nama_user;
+        user.email = email || user.email;
+        user.role_id = role_id || user.role_id;
+        
+        // Data yang boleh kosong (Cegah error Integer dengan ternary operator)
+        user.nim = nim || null;
+        user.prodi = prodi || null;
+        user.angkatan = angkatan ? Number(angkatan) : null; // <-- Kunci perbaikan Error 500
+        user.bio = bio || null;
+        user.no_wa = no_wa || null;
+        user.website = website || null;
+        user.email_kontak = email_kontak || null;
 
-        // Update password hanya jika admin mengisinya
+        // Proses hash jika Admin memasukkan password baru
         if (password && password.trim() !== "") {
-            const bcrypt = await import('bcrypt');
             user.password = await bcrypt.hash(password, 10);
         }
 
         await user.save();
         res.status(200).json({ message: "Data pengguna berhasil diperbarui" });
     } catch (error) {
+        console.error("Error Update User:", error);
         res.status(500).json({ message: error.message });
     }
 };
