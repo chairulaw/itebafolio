@@ -49,10 +49,19 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password });
       
+      // Jika butuh OTP (Mahasiswa/Pengunjung)
       if (response.data.needVerification) {
         toast.success(response.data.message || "OTP berhasil dikirim ke email Anda!");
         setIsOtpStep(true);
-        setCountdown(60); // Set timer 60 detik untuk resend
+        setCountdown(60); 
+      } 
+      // Jika TIDAK butuh OTP (Admin)
+      else {
+        toast.success(response.data.message || "Berhasil masuk!");
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        navigate('/'); 
+        window.location.reload(); 
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Gagal melakukan login.");
@@ -186,13 +195,13 @@ export default function Login() {
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-2">Email</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="email@domain.com"
-                    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
-                  />
+    type="text" // <-- Ubah dari "email" menjadi "text"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    required
+    placeholder="Email"
+    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
+  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-2">Password</label>
