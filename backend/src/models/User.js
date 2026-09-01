@@ -23,7 +23,12 @@ const User = db.define("users", {
     avatar: { type: DataTypes.STRING(255), allowNull: true },
 
     // 👇 TAMBAHAN: Kolom email kontak untuk tombol "Hubungi Mahasiswa"
-    email_kontak: { type: DataTypes.STRING(255), allowNull: true }
+    email_kontak: { type: DataTypes.STRING(255), allowNull: true },
+
+    // 👇 TAMBAHAN: Kolom untuk verifikasi akun via OTP email
+    otp_code: { type: DataTypes.STRING(6), allowNull: true },
+    otp_expires_at: { type: DataTypes.DATE, allowNull: true },
+    is_verified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }
 }, {
     freezeTableName: true,
     timestamps: true,

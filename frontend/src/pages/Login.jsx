@@ -59,6 +59,11 @@ export default function Login() {
       toast.error(error.response?.data?.message || "Terjadi kesalahan saat login!", {
         id: toastId, // Mengganti toast loading yang sama
       });
+
+      // Akun belum diverifikasi OTP -> arahkan ke halaman verifikasi
+      if (error.response?.data?.needVerification) {
+        navigate('/verify-otp', { state: { email } });
+      }
     } finally {
       setIsLoading(false);
     }

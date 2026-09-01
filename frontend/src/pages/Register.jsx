@@ -62,8 +62,8 @@ export default function Register() {
 
       await api.post('/auth/register', payload);
 
-      toast.success("Pendaftaran berhasil! Silakan masuk menggunakan akun Anda.");
-      navigate('/login');
+      toast.success("Pendaftaran berhasil! Cek email Anda untuk kode verifikasi.");
+      navigate('/verify-otp', { state: { email } });
 
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");

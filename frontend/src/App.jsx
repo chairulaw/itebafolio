@@ -14,6 +14,7 @@ import { Toaster } from 'react-hot-toast';
 import Homepage from './pages/Homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyOtp from './pages/VerifyOtp';
 import ProjectDetail from './pages/ProjectDetail';
 import ManageProject from './pages/ManageProject';
 import EditProfile from './pages/EditProfile';
@@ -44,7 +45,7 @@ function AppContent() {
 
   const isSettingsPath = location.pathname.startsWith("/profile/settings") || location.pathname.startsWith("/profile/account");
 
-  const hidePaths = ["/login", "/register", "/manage-project"];
+  const hidePaths = ["/login", "/register", "/verify-otp", "/manage-project"];
 
   const shouldHideHeaderAndFooter = hidePaths.some(path =>
     location.pathname === path || location.pathname.startsWith(`${path}/`)
@@ -85,6 +86,7 @@ function AppContent() {
             <Route path="/best-projects" element={<Homepage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/project/:id" element={<ProjectDetail />} />
             <Route path="/manage-project" element={<ManageProject />} />
             <Route path="/manage-project/:projectId" element={<ManageProject />} />

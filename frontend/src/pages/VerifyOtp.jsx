@@ -1,0 +1,166 @@
+import React, { useState, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import Iridescence from '../components/Iridescence';
+import { logoAuth } from '../assets/Assets';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
+
+export default function VerifyOtp() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [email] = useState(location.state?.email || '');
+  const [otpCode, setOtpCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  const iridescenceBackground = useMemo(() => (
+    <div className="absolute inset-0 z-0">
+      <Iridescence
+        color={[0.1725, 0.4431, 0.7215]}
+        mouseReact={true}
+        amplitude={0.1}
+        speed={0.7}
+      />
+    </div>
+  ), []);
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+
+    if (!email) {
+      return toast.error("Email tidak ditemukan. Silakan daftar atau masuk ulang.");
+    }
+
+    setIsLoading(true);
+    try {
+      await api.post('/auth/verify-otp', { email, otp_code: otpCode });
+
+      toast.success("Verifikasi berhasil! Silakan masuk.");
+      navigate('/login');
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      return toast.error("Email tidak ditemukan. Silakan daftar atau masuk ulang.");
+    }
+
+    setIsResending(true);
+    try {
+      await api.post('/auth/resend-otp', { email });
+      toast.success("Kode OTP baru telah dikirim ke email Anda.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  return (
+    <div className="h-screen flex relative overflow-hidden bg-[#05070C]">
+      <Link
+        to="/login"
+        className="absolute top-6 left-6 md:top-8 md:left-8 z-50 flex items-center justify-center w-11 h-11 text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-xl rounded-full transition-all duration-300 hover:-translate-x-1 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)]"
+      >
+        <ArrowLeft size={19} />
+      </Link>
+
+      {iridescenceBackground}
+
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/40"></div>
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.08),transparent_55%)]"></div>
+
+      <div className="hidden md:flex w-1/2 h-full relative z-10 flex-col justify-between p-12 lg:p-16 text-white pointer-events-none">
+        <div className="flex items-center gap-2.5 mt-10">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/70"></span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/60">Showcase Karya Mahasiswa</span>
+        </div>
+
+        <div>
+          <img
+            src={logoAuth}
+            alt="Logo ITEBAFolio"
+            className="h-12 lg:h-16 w-auto object-contain object-left self-start mb-7 drop-shadow-lg"
+          />
+          <p className="text-3xl lg:text-[2.6rem] font-light leading-[1.15] max-w-lg drop-shadow-md text-white/95 text-left self-start tracking-tight">
+            Satu langkah lagi menuju akun Anda
+          </p>
+          <p className="mt-4 text-[14px] text-white/50 max-w-md leading-relaxed">
+            Kami telah mengirimkan kode verifikasi ke email Anda.
+          </p>
+        </div>
+
+        <p className="text-[11px] text-white/35 tracking-wide">© {new Date().getFullYear()} ITEBAFolio. Semua hak dilindungi.</p>
+      </div>
+
+      <div className="w-full md:w-1/2 h-full relative z-10 flex items-center justify-center p-6 md:p-10 overflow-y-auto">
+        <div className="w-full max-w-md bg-white/95 md:bg-white/[0.07] backdrop-blur-2xl p-8 md:p-10 rounded-[28px] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.55)] border border-white/10 my-auto">
+
+          <img
+            src={logoAuth}
+            alt="Logo ITEBAFolio"
+            className="h-9 w-auto object-contain mb-6 md:hidden"
+          />
+
+          <div className="mb-5">
+            <h2 className="text-[24px] font-bold text-gray-900 md:text-white mb-1.5 tracking-tight">Verifikasi Email</h2>
+            <p className="text-[13px] text-gray-500 md:text-white/55">
+              Masukkan kode OTP yang dikirim ke {email ? <span className="font-semibold">{email}</span> : 'email Anda'}
+            </p>
+          </div>
+
+          <form className="space-y-3.5" onSubmit={handleVerify}>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-1.5">Kode OTP</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                required
+                placeholder="123456"
+                className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10 text-center tracking-[0.5em] text-lg font-semibold"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group w-full py-3.5 rounded-full font-semibold text-[14.5px] mt-3 flex items-center justify-center gap-2 transition-all duration-300 ${
+                isLoading
+                  ? 'bg-gray-300 md:bg-white/20 text-gray-500 md:text-white/50 cursor-not-allowed'
+                  : 'bg-[#2C71B8] text-white shadow-[0_14px_30px_-10px_rgba(44,113,184,0.55)] hover:shadow-[0_18px_36px_-8px_rgba(44,113,184,0.6)] hover:-translate-y-0.5 active:translate-y-0'
+              }`}
+            >
+              {isLoading ? 'Memproses...' : (
+                <>
+                  Verifikasi
+                  <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-7 text-center text-[13px] text-gray-500 md:text-white/50">
+            Tidak menerima kode?{' '}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending}
+              className="text-[#2C71B8] md:text-[#7CB4E8] hover:underline font-semibold disabled:opacity-50"
+            >
+              {isResending ? 'Mengirim...' : 'Kirim ulang'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
