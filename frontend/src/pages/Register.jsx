@@ -32,7 +32,7 @@ export default function Register() {
     </div>
   ), []);
 
-  const handleRegister = async (e) => {
+const handleRegister = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -62,8 +62,9 @@ export default function Register() {
 
       await api.post('/auth/register', payload);
 
-      toast.success("Pendaftaran berhasil! Cek email Anda untuk kode verifikasi.");
-      navigate('/verify-otp', { state: { email } });
+      // PERUBAHAN DI SINI: Langsung redirect ke Login
+      toast.success("Pendaftaran berhasil! Silakan masuk dengan akun Anda.");
+      navigate('/login'); 
 
     } catch (error) {
       toast.error(error.response?.data?.message || "Terjadi kesalahan pada server");
