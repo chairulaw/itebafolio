@@ -7,12 +7,10 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 export default function Login() {
-  // State untuk Form Login Basic
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // State untuk Form OTP
   const [isOtpStep, setIsOtpStep] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(0);
@@ -20,7 +18,6 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  // Background Animasi (Sama dengan Register)
   const iridescenceBackground = useMemo(() => (
     <div className="absolute inset-0 z-0">
       <Iridescence
@@ -32,7 +29,6 @@ export default function Login() {
     </div>
   ), []);
 
-  // Timer Hitung Mundur untuk Resend OTP
   useEffect(() => {
     let timer;
     if (countdown > 0 && isOtpStep) {
@@ -41,7 +37,6 @@ export default function Login() {
     return () => clearInterval(timer);
   }, [countdown, isOtpStep]);
 
-  // TAHAP 1: Submit Email & Password
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -49,14 +44,11 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      // Jika butuh OTP (Mahasiswa/Pengunjung)
       if (response.data.needVerification) {
         toast.success(response.data.message || "OTP berhasil dikirim ke email Anda!");
         setIsOtpStep(true);
         setCountdown(60); 
-      } 
-      // Jika TIDAK butuh OTP (Admin)
-      else {
+      } else {
         toast.success(response.data.message || "Berhasil masuk!");
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -70,18 +62,15 @@ export default function Login() {
     }
   };
 
-  // TAHAP 2: Input OTP Behavior
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus ke input berikutnya
     if (value !== '' && index < 5) {
       otpRefs.current[index + 1].focus();
     }
-    // Auto-submit jika sudah terisi 6 digit
     if (value !== '' && index === 5 && newOtp.every(v => v !== '')) {
       handleVerifyOtp(newOtp.join(''));
     }
@@ -93,7 +82,32 @@ export default function Login() {
     }
   };
 
-  // TAHAP 3: Submit OTP ke Backend
+  // FUNGSI BARU: Menangani event Paste
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    // Ambil data clipboard, hilangkan karakter non-angka, potong maksimal 6 digit
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    
+    if (!pastedData) return;
+
+    const newOtp = [...otp];
+    for (let i = 0; i < pastedData.length; i++) {
+      newOtp[i] = pastedData[i];
+    }
+    setOtp(newOtp);
+
+    // Pindahkan fokus ke kotak terakhir yang terisi
+    const focusIndex = Math.min(pastedData.length, 5);
+    if (otpRefs.current[focusIndex]) {
+      otpRefs.current[focusIndex].focus();
+    }
+
+    // Jika 6 digit terpenuhi saat di-paste, langsung verifikasi otomatis
+    if (pastedData.length === 6) {
+      handleVerifyOtp(pastedData);
+    }
+  };
+
   const handleVerifyOtp = async (otpString) => {
     const finalOtp = otpString || otp.join('');
     if (finalOtp.length < 6) return toast.error("Masukkan 6 digit kode OTP!");
@@ -105,25 +119,19 @@ export default function Login() {
       const response = await api.post('/auth/verify-otp', { email, otp_code: finalOtp });
       
       toast.success("Berhasil masuk!", { id: loadingToast });
-      
-      // Simpan token (sesuaikan dengan cara Anda menyimpan JWT, misalnya di localStorage)
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Redirect ke halaman utama / dashboard
       navigate('/'); 
-      window.location.reload(); // Refresh state aplikasi
+      window.location.reload(); 
     } catch (error) {
       toast.error(error.response?.data?.message || "OTP Salah atau Kedaluwarsa.", { id: loadingToast });
-      // Reset input OTP jika salah
       setOtp(['', '', '', '', '', '']);
-      otpRefs.current[0].focus();
+      if (otpRefs.current[0]) otpRefs.current[0].focus();
     } finally {
       setIsLoading(false);
     }
   };
 
-  // TAHAP 4: Resend OTP
   const handleResendOtp = async () => {
     if (countdown > 0) return;
     
@@ -135,7 +143,7 @@ export default function Login() {
       toast.success("Kode OTP baru telah dikirim!", { id: loadingToast });
       setCountdown(60);
       setOtp(['', '', '', '', '', '']);
-      otpRefs.current[0].focus();
+      if (otpRefs.current[0]) otpRefs.current[0].focus();
     } catch (error) {
       toast.error(error.response?.data?.message || "Gagal mengirim ulang OTP.", { id: loadingToast });
     } finally {
@@ -145,7 +153,6 @@ export default function Login() {
 
   return (
     <div className="h-screen flex relative overflow-hidden bg-[#05070C]">
-      {/* Back Button */}
       <Link
         to={isOtpStep ? "#" : "/"}
         onClick={() => isOtpStep && setIsOtpStep(false)}
@@ -159,7 +166,6 @@ export default function Login() {
       <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/40"></div>
       <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.08),transparent_55%)]"></div>
 
-      {/* Left Branding Panel */}
       <div className="hidden md:flex w-1/2 h-full relative z-10 flex-col justify-between p-12 lg:p-16 text-white pointer-events-none">
         <div className="flex items-center gap-2.5 mt-10">
           <span className="w-1.5 h-1.5 rounded-full bg-white/70"></span>
@@ -177,31 +183,29 @@ export default function Login() {
         <p className="text-[11px] text-white/35 tracking-wide">© {new Date().getFullYear()} ITEBAFolio. Semua hak dilindungi.</p>
       </div>
 
-      {/* Right Form Panel */}
       <div className="w-full md:w-1/2 h-full relative z-10 flex items-center justify-center p-6 md:p-10 overflow-y-auto">
         <div className="w-full max-w-md bg-white/95 md:bg-white/[0.07] backdrop-blur-2xl p-8 md:p-10 rounded-[28px] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.55)] border border-white/10 my-auto transition-all duration-500">
           
           <img src={logoAuth} alt="Logo" className="h-9 w-auto object-contain mb-8 md:hidden" />
 
-          {/* KONDISI 1: FORM LOGIN NORMAL */}
           {!isOtpStep ? (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="mb-8">
                 <h2 className="text-[26px] font-bold text-gray-900 md:text-white mb-2 tracking-tight">Masuk ke Akun</h2>
-                <p className="text-[13.5px] text-gray-500 md:text-white/55">Masukkan email dan kata sandi Anda</p>
+                <p className="text-[13.5px] text-gray-500 md:text-white/55">Masukkan data identitas Anda</p>
               </div>
 
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
                 <div>
-                  <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-2">Email</label>
+                  <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-2">Email / Username</label>
                   <input
-    type="text" // <-- Ubah dari "email" menjadi "text"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    required
-    placeholder="Email"
-    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
-  />
+                    type="text"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="Email Kampus / ID Admin"
+                    className="w-full px-4 py-3.5 bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white placeholder:text-gray-400 md:placeholder:text-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8]/40 focus:bg-white md:focus:bg-white/[0.1] transition-all duration-200 border border-gray-200 md:border-white/10"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-600 md:text-white/60 uppercase tracking-wider mb-2">Password</label>
@@ -235,8 +239,6 @@ export default function Login() {
               </div>
             </div>
           ) : (
-
-            /* KONDISI 2: FORM VERIFIKASI OTP */
             <div className="animate-in fade-in slide-in-from-left-4 duration-500 flex flex-col items-center text-center">
               <div className="w-16 h-16 rounded-full bg-[#2C71B8]/10 flex items-center justify-center mb-6 border border-[#2C71B8]/20">
                 <ShieldCheck size={32} className="text-[#2C71B8] md:text-[#7CB4E8]" />
@@ -258,6 +260,7 @@ export default function Login() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onPaste={handleOtpPaste} // <-- Event terpasang di sini
                     className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-gray-50 md:bg-white/[0.06] text-gray-900 md:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5B9BD8] focus:bg-white md:focus:bg-white/[0.1] transition-all border border-gray-200 md:border-white/10"
                   />
                 ))}

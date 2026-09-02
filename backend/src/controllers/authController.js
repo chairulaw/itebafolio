@@ -45,28 +45,22 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        // 'email' dari frontend sekarang bisa berisi email, username, atau NIM
-        const { email, password } = req.body; 
+        const { email, password } = req.body;
 
-        // 1. Cari user berdasarkan email, nama_user, atau nim secara berurutan
         let user = await User.findOne({ where: { email } });
         if (!user) user = await User.findOne({ where: { nama_user: email } });
         if (!user) user = await User.findOne({ where: { nim: email } });
 
         if (!user) return res.status(404).json({ message: "Akun tidak ditemukan!" });
 
-        // 2. Cek apakah password cocok
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Password salah!" });
 
-        // ========================================================
-        // 3. JALUR KHUSUS ADMIN (Bypass OTP)
-        // ========================================================
         if (user.role_id === 1) {
             const token = generateAccessToken(user);
             return res.status(200).json({
                 message: "Selamat datang kembali, Admin!",
-                needVerification: false, // Memberitahu frontend untuk TIDAK membuka form OTP
+                needVerification: false, 
                 token: token,
                 user: {
                     id: user.id,
@@ -76,9 +70,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // ========================================================
-        // 4. JALUR NORMAL (Mahasiswa & Pengunjung wajib OTP)
-        // ========================================================
         const otpCode = generateOtp();
         user.otp_code = otpCode;
         user.otp_expires_at = getOtpExpiry();
@@ -116,7 +107,6 @@ export const verifyOtp = async (req, res) => {
             return res.status(400).json({ message: "Kode OTP sudah kedaluwarsa. Silakan minta kode baru." });
         }
 
-        // OTP Valid -> Bersihkan OTP dan Terbitkan Token JWT
         user.otp_code = null;
         user.otp_expires_at = null;
         await user.save();
